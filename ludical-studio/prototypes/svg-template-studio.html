@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SVG Template Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --bg:#0b141d;
+  --bg-grid: rgba(55,224,209,0.05);
+  --panel:#0f1c28;
+  --panel-2:#0c1620;
+  --border:#1c3140;
+  --border-bright:#2a4a5e;
+  --text:#e7f1f5;
+  --text-dim:#7d94a3;
+  --cyan:#37e0d1;
+  --amber:#ffb347;
+  --amber-dim:#8a6a3a;
+  --danger:#ff6b6b;
+  --mono:'JetBrains Mono', monospace;
+  --display:'Space Grotesk', sans-serif;
+  --ui:'Inter', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--ui);}
+body{
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  min-height:100vh;
+}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 24px 80px;}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-mark{
+  width:44px;height:44px;border:2px solid var(--cyan);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;position:relative;flex:none;
+  background:linear-gradient(160deg, rgba(55,224,209,.12), transparent);
+}
+.brand-mark svg{width:24px;height:24px;stroke:var(--cyan);}
+.brand h1{font-family:var(--display);font-size:22px;margin:0;letter-spacing:.3px;}
+.brand p{margin:2px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;}
+.demo-btn{
+  font-family:var(--mono);font-size:12px;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--cyan);background:transparent;border:1px solid var(--border-bright);
+  padding:10px 16px;border-radius:6px;cursor:pointer;transition:.15s;
+}
+.demo-btn:hover{background:rgba(55,224,209,.08);border-color:var(--cyan);}
+
+/* Stepper */
+.stepper{display:flex;gap:2px;margin-bottom:24px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--panel-2);}
+.step-tab{
+  flex:1;padding:14px 10px;text-align:center;cursor:pointer;position:relative;
+  border-right:1px solid var(--border);transition:.15s;
+}
+.step-tab:last-child{border-right:none;}
+.step-tab .num{font-family:var(--mono);font-size:11px;color:var(--text-dim);display:block;letter-spacing:1px;}
+.step-tab .label{font-family:var(--display);font-size:14px;margin-top:2px;color:var(--text-dim);}
+.step-tab.active{background:rgba(55,224,209,.07);}
+.step-tab.active .num{color:var(--cyan);}
+.step-tab.active .label{color:var(--text);}
+.step-tab.done .num::after{content:"✓";margin-left:5px;color:var(--cyan);}
+.step-tab:hover{background:rgba(255,255,255,.02);}
+
+/* Panels */
+.panel{
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;
+  padding:26px;display:none;
+}
+.panel.active{display:block;}
+.panel h2{font-family:var(--display);font-size:19px;margin:0 0 6px;}
+.panel .sub{font-family:var(--ui);font-size:13.5px;color:var(--text-dim);margin:0 0 22px;line-height:1.5;}
+
+textarea.code{
+  width:100%;min-height:220px;background:var(--panel-2);color:var(--cyan);
+  border:1px solid var(--border);border-radius:8px;padding:14px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:vertical;
+}
+textarea.code:focus{outline:none;border-color:var(--border-bright);}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+.btn{
+  font-family:var(--ui);font-weight:600;font-size:13.5px;
+  padding:11px 20px;border-radius:7px;border:1px solid transparent;cursor:pointer;transition:.15s;
+}
+.btn-primary{background:var(--amber);color:#211505;}
+.btn-primary:hover{background:#ffc369;}
+.btn-primary:disabled{background:#3a3428;color:#6b6250;cursor:not-allowed;}
+.btn-ghost{background:transparent;border:1px solid var(--border-bright);color:var(--text);}
+.btn-ghost:hover{background:rgba(255,255,255,.04);}
+.btn-danger{background:transparent;border:1px solid rgba(255,107,107,.4);color:var(--danger);}
+.btn-danger:hover{background:rgba(255,107,107,.08);}
+.btn-sm{padding:7px 12px;font-size:12px;}
+input[type=file]{display:none;}
+
+.file-drop{
+  border:1.5px dashed var(--border-bright);border-radius:10px;padding:22px;text-align:center;
+  font-family:var(--mono);font-size:12.5px;color:var(--text-dim);cursor:pointer;transition:.15s;
+}
+.file-drop:hover{border-color:var(--cyan);color:var(--text);}
+
+/* Schema table */
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{
+  text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text-dim);padding:10px 12px;border-bottom:1px solid var(--border-bright);
+}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.015);}
+.id-pill{font-family:var(--mono);font-size:12.5px;color:var(--cyan);background:rgba(55,224,209,.08);padding:3px 9px;border-radius:5px;}
+select, .cell-input{
+  background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:6px;
+  padding:7px 9px;font-family:var(--ui);font-size:13px;width:100%;
+}
+select:focus,.cell-input:focus{outline:none;border-color:var(--cyan);}
+
+.empty-state{
+  border:1px dashed var(--border);border-radius:10px;padding:40px 20px;text-align:center;color:var(--text-dim);
+  font-family:var(--mono);font-size:12.5px;
+}
+
+/* Data grid */
+.grid-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.grid-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+.data-table{min-width:100%;}
+.data-table th{white-space:nowrap;background:var(--panel-2);position:sticky;top:0;}
+.data-table td{white-space:nowrap;}
+.row-idx{font-family:var(--mono);color:var(--text-dim);font-size:12px;}
+input[type=color]{width:44px;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);cursor:pointer;}
+.thumb-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border-bright);background:var(--panel-2);cursor:pointer;flex:none;overflow:hidden;padding:0;}
+.thumb-btn img{width:100%;height:100%;object-fit:cover;display:block;}
+.asset-cell{display:flex;align-items:center;gap:8px;}
+.asset-url{width:120px;}
+
+/* Preview */
+.preview-layout{display:flex;gap:26px;flex-wrap:wrap;}
+.preview-controls{flex:1;min-width:220px;}
+.preview-stage{flex:2;min-width:320px;}
+.viewfinder{
+  position:relative;border:1px solid var(--border-bright);border-radius:4px;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(255,255,255,.02) 27px, rgba(255,255,255,.02) 28px),
+    var(--panel-2);
+  padding:26px;display:flex;align-items:center;justify-content:center;min-height:420px;
+}
+.viewfinder::before,.viewfinder::after,.viewfinder .c3,.viewfinder .c4{
+  content:"";position:absolute;width:18px;height:18px;border-color:var(--cyan);
+}
+.viewfinder::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid;}
+.viewfinder::after{top:-1px;right:-1px;border-top:2px solid;border-right:2px solid;}
+.viewfinder .c3{bottom:-1px;left:-1px;border-bottom:2px solid;border-left:2px solid;}
+.viewfinder .c4{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid;}
+.viewfinder svg{max-width:100%;max-height:520px;filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));}
+.field-label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin:16px 0 6px;}
+.field-label:first-child{margin-top:0;}
+
+/* Export */
+.export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:6px;}
+.export-card{border:1px solid var(--border);border-radius:10px;padding:20px;background:var(--panel-2);}
+.export-card h3{font-family:var(--display);font-size:15.5px;margin:0 0 6px;}
+.export-card p{font-size:12.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.5;}
+.progress-wrap{margin-top:20px;display:none;}
+.progress-wrap.active{display:block;}
+.progress-bar{height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.progress-fill{height:100%;background:var(--cyan);width:0%;transition:width .15s;}
+.progress-text{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);margin-top:8px;}
+
+.nav-footer{display:flex;justify-content:space-between;margin-top:26px;}
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;background:rgba(255,179,71,.12);color:var(--amber);padding:3px 9px;border-radius:5px;margin-left:8px;}
+.help-note{font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:16px;padding:12px 14px;border-left:2px solid var(--border-bright);background:rgba(255,255,255,.015);}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#141f2b;border:1px solid var(--border-bright);color:var(--text);
+  padding:12px 20px;border-radius:8px;font-family:var(--mono);font-size:12.5px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:50;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.autosave-indicator{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.3px;white-space:nowrap;}
+.restore-banner{
+  display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:rgba(255,179,71,.08);border:1px solid rgba(255,179,71,.35);border-radius:10px;
+  padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--text);
+}
+
+/* Reorder, bulk-fill, missing-image, cancel, PDF options */
+.reorder-btn{background:transparent;border:1px solid var(--border-bright);color:var(--text-dim);cursor:pointer;border-radius:4px;padding:2px 7px;font-size:12px;font-family:var(--mono);transition:.15s;line-height:1;}
+.reorder-btn:hover{color:var(--text);border-color:var(--cyan);}
+.reorder-btn:disabled{opacity:.25;cursor:not-allowed;pointer-events:none;}
+.bulk-btn{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;transition:.15s;margin-left:4px;}
+.bulk-btn:hover{color:var(--cyan);background:rgba(55,224,209,.08);}
+.missing-img-warn{color:var(--amber);font-size:10.5px;font-family:var(--mono);margin-top:2px;}
+.missing-img-warn::before{content:"⚠ ";}
+.warn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:4px;flex:none;}
+.cancel-btn{background:transparent;border:1px solid rgba(255,107,107,.4);color:var(--danger);padding:9px 18px;border-radius:7px;cursor:pointer;font-family:var(--ui);font-size:13px;font-weight:600;transition:.15s;}
+.cancel-btn:hover{background:rgba(255,107,107,.08);}
+.toast-action{display:flex;align-items:center;gap:6px;}
+.toast-btn{background:var(--amber);color:#211505;border:none;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:var(--ui);font-weight:600;font-size:12px;white-space:nowrap;transition:.15s;}
+.toast-btn:hover{background:#ffc369;}
+.toast .toast-msg{flex:1;}
+.char-counter{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);margin-top:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg></div>
+      <div>
+        <h1>SVG Template Studio</h1>
+        <p>analyze &rarr; schema &rarr; data &rarr; preview &rarr; batch export</p>
+      </div>
+    </div>
+    <div class="row" style="margin-top:0;gap:10px;">
+      <span class="autosave-indicator" id="autosaveIndicator"></span>
+      <button class="demo-btn" onclick="document.getElementById('projectImportInput').click()">Load project</button>
+      <input type="file" id="projectImportInput" accept=".json" style="display:none" onchange="importProject(event)">
+      <button class="demo-btn" onclick="exportProject()">Save project</button>
+      <button class="demo-btn" onclick="loadDemo()">Load demo template</button>
+    </div>
+  </header>
+
+  <div class="restore-banner" id="restoreBanner">
+    <span id="restoreInfo"></span>
+    <span class="row" style="margin-top:0;">
+      <button class="btn btn-primary btn-sm" onclick="acceptRestore()">Restore draft</button>
+      <button class="btn btn-ghost btn-sm" onclick="dismissRestore()">Discard</button>
+    </span>
+  </div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- STEP 1: TEMPLATE -->
+  <section class="panel" data-step="0">
+    <h2>1. Load your SVG template</h2>
+    <p class="sub">Paste SVG markup or upload a .svg file. Tag any element you want to be data-driven with an <code>id</code> attribute — text, image, or shape. The Studio reads those ids to build your schema.</p>
+    <div class="file-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      Click to upload an .svg file, or drop one here — or just paste markup below
+      <input type="file" id="fileInput" accept=".svg,image/svg+xml">
+    </div>
+    <div style="margin-top:14px;">
+      <textarea class="code" id="svgInput" placeholder="<svg>...</svg>"></textarea>
+    </div>
+    <div class="help-note">Convention tip: use plain ids like <span class="id-pill">name</span> <span class="id-pill">time</span> <span class="id-pill">effect</span> <span class="id-pill">art</span>. Add <code>data-type="text|number|color|image"</code> on an element to override the auto-detected field type.<br><br>SVG text never wraps automatically — add <code>data-wrap-width="480"</code> on a <code>&lt;text&gt;</code> element to auto-wrap long values to that many px wide. Optional: <code>data-line-height="26"</code> (defaults to ~1.25× font size) and <code>data-max-lines="3"</code> (truncates with "…" past that many lines).</div>
+    <div class="nav-footer">
+      <span></span>
+      <button class="btn btn-primary" onclick="runAnalyze()">Analyze template →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: SCHEMA -->
+  <section class="panel" data-step="1">
+    <h2>2. Generated schema</h2>
+    <p class="sub">Every tagged element became a field. Adjust the type if the auto-detection guessed wrong — this decides what kind of editor you get in the data step. Exclude a field to hide it from the data editor — it'll always render using its default value instead.</p>
+    <div id="schemaTableWrap"></div>
+    <div class="nav-footer">
+      <button class="btn btn-ghost" onclick="goStep(0)">← Back</button>
+      <button class="btn btn-primary" id="toDataBtn" onclick="goStep(2)">Continue to data →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: DATA -->
+  <section class="panel" data-step="2">
+    <h2>3. Fill in your data</h2>
+    <p class="sub">Each row becomes one generated card. Add rows by hand, or import a JSON array / CSV that matches your schema keys.</p>
+    <div class="grid-toolbar">
+      <div class="row" style="margin-top:0;">
+        <button class="btn btn-ghost btn-sm" onclick="addRow()">+ Add row</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('jsonImport').click()">Import JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('csvImport').click()">Import CSV</button>
+        <input type="file" id="jsonImport" accept=".json" onchange="importJSON(event)">
+        <input type="file" id="csvImport" accept=".csv" onchange="importCSV(event)">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportJSON()">Export JSON</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="grid-scroll"><table class="data-table" id="dataTable"></table></div>
+    <div class="nav-footer">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" id="toPreviewBtn" onclick="goStep(3)">Continue to preview →</button>
+    </div>
+  </section>
+
+  <!-- STEP 4: PREVIEW -->
+  <section class="panel" data-step="3">
+    <h2>4. Preview</h2>
+    <p class="sub">Check how each row renders before batch generating everything.</p>
+    <div class="preview-layout">
+      <div class="preview-controls">
+        <div class="field-label">Row</div>
+        <select id="previewRowSelect" onchange="renderPreview()"></select>
+        <div id="previewFieldSummary"></div>
+      </div>
+      <div class="preview-stage">
+        <div class="viewfinder" id="viewfinder"><div class="c3"></div><div class="c4"></div><div id="previewMount"></div></div>
+      </div>
+    </div>
+    <div class="nav-footer">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Continue to export →</button>
+    </div>
+  </section>
+
+  <!-- STEP 5: EXPORT -->
+  <section class="panel" data-step="4">
+    <h2>5. Batch generate</h2>
+    <p class="sub" id="exportSummary">Generate every row as a file.</p>
+    <div class="help-note" style="margin-bottom:16px;">
+      <label style="font-family:var(--mono);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        Filename pattern:
+        <input class="cell-input filename-pattern" id="filenamePattern" value="{name}" placeholder="{id}-{name}" style="width:280px;font-family:var(--mono);font-size:12px;">
+        <span style="font-size:11px;color:var(--text-dim);">Use <code>{fieldId}</code> placeholders — e.g. <code>{id}-{name}</code></span>
+      </label>
+    </div>
+    <div class="export-grid">
+      <div class="export-card">
+        <h3>SVG files<span class="badge">.zip</span></h3>
+        <p>Vector output, fully editable. Fastest export, smallest files.</p>
+        <button class="btn btn-primary" onclick="exportSVGs()">Download SVGs</button>
+      </div>
+      <div class="export-card">
+        <h3>PNG images<span class="badge">.zip</span></h3>
+        <p>Rasterized at your chosen scale — good for print or upload.</p>
+        <div class="row" style="margin-top:0;margin-bottom:14px;">
+          <label style="font-size:12.5px;color:var(--text-dim);font-family:var(--mono);">Scale</label>
+          <select id="pngScale" style="width:90px;">
+            <option value="1">1×</option>
+            <option value="2" selected>2×</option>
+            <option value="3">3×</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="exportPNGs()">Download PNGs</button>
+      </div>
+      <div class="export-card">
+        <h3>PDF booklet<span class="badge">N-up</span></h3>
+        <p>Grid layout — multiple cards per page. Best for physical decks.</p>
+        <div class="pdf-options">
+          <div class="row" style="margin-top:0;margin-bottom:10px;">
+            <label>Columns</label>
+            <input class="cell-input" type="number" id="pdfCols" value="3" min="1" max="6" style="width:70px;">
+            <label>Rows</label>
+            <input class="cell-input" type="number" id="pdfRows" value="3" min="1" max="6" style="width:70px;">
+          </div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="pdfGuides" checked>
+            Show cut guides (dashed lines between cards)
+          </label>
+        </div>
+        <button class="btn btn-primary" onclick="exportPDF()" style="margin-top:14px;">Download PDF</button>
+      </div>
+      <div class="export-card">
+        <h3>CSV data</h3>
+        <p>Tabular data export for spreadsheets, matching your CSV import format.</p>
+        <button class="btn btn-primary" onclick="exportCSV()">Download CSV</button>
+      </div>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText"></div>
+      <div style="text-align:center;margin-top:8px;">
+        <button class="cancel-btn" id="cancelExportBtn" style="display:none;" onclick="cancelExport()">Cancel export</button>
+      </div>
+    </div>
+    <div class="nav-footer">
+      <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+      <span></span>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------------- State ---------------- */
+let templateString = "";
+let templateDoc = null;      // parsed XML document of the template
+let schema = [];             // [{id, type, label, tag, defaultValue}]
+let rows = [];                // [{ _rid, values:{fieldId: value} }]
+let currentStep = 0;
+let rowCounter = 0;
+
+const STEPS = ["Template","Schema","Data","Preview","Export"];
+
+/* ---------------- Stepper ---------------- */
+function buildStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEPS.map((s,i)=>`
+    <div class="step-tab" data-idx="${i}" onclick="tryGoStep(${i})">
+      <span class="num">STEP ${i+1}</span>
+      <span class="label">${s}</span>
+    </div>`).join('');
+}
+function tryGoStep(i){
+  if(i>0 && schema.length===0){ toast("Analyze a template first"); return; }
+  if(i>=2 && rows.length===0 && i!==1){ /* allow visiting data with 0 rows */ }
+  goStep(i);
+}
+function goStep(i){
+  currentStep = i;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', +p.dataset.step===i));
+  document.querySelectorAll('.step-tab').forEach((t,idx)=>{
+    t.classList.toggle('active', idx===i);
+    t.classList.toggle('done', idx<i);
+  });
+  if(i===2) renderDataTable();
+  if(i===3) renderPreviewControls();
+  if(i===4) updateExportSummary();
+}
+buildStepper();
+goStep(0);
+
+/* ---------------- Persistence: autosave + project save/load ---------------- */
+const AUTOSAVE_KEY = 'svgTemplateStudio:autosave:v1';
+let autosaveTimer = null;
+let storageAvailable = true;
+
+function buildProjectBundle(){
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    templateString,
+    schema: schema.map(f=>({id:f.id, type:f.type, wrapWidth:f.wrapWidth||null, maxLines:f.maxLines||null, excluded:!!f.excluded})),
+    data: rows.map(r=>r.values)
+  };
+}
+function scheduleAutosave(){
+  if(!storageAvailable || !templateDoc) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(saveDraft, 600);
+}
+function saveDraft(){
+  try{
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildProjectBundle()));
+    setAutosaveIndicator('Draft saved · ' + new Date().toLocaleTimeString());
+  }catch(err){
+    storageAvailable = false;
+    setAutosaveIndicator('Autosave unavailable in this environment');
+  }
+}
+function setAutosaveIndicator(text){
+  const el = document.getElementById('autosaveIndicator');
+  if(el) el.textContent = text;
+}
+function tryRestoreDraft(){
+  let raw;
+  try{ raw = localStorage.getItem(AUTOSAVE_KEY); }
+  catch(err){ storageAvailable = false; return; }
+  if(!raw) return;
+  try{
+    const payload = JSON.parse(raw);
+    if(!payload.templateString) return;
+    window._pendingRestore = payload;
+    const banner = document.getElementById('restoreBanner');
+    banner.style.display = 'flex';
+    document.getElementById('restoreInfo').textContent =
+      `Found an autosaved draft from ${new Date(payload.savedAt).toLocaleString()} — ${payload.schema.length} field(s), ${payload.data.length} row(s).`;
+  }catch(err){ /* corrupted draft — ignore silently */ }
+}
+function acceptRestore(){
+  if(window._pendingRestore) loadProjectBundle(window._pendingRestore, {silent:true});
+  document.getElementById('restoreBanner').style.display = 'none';
+  toast('Draft restored');
+}
+function dismissRestore(){
+  document.getElementById('restoreBanner').style.display = 'none';
+  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(err){}
+}
+function loadProjectBundle(payload, opts){
+  let result;
+  try{ result = analyzeSVGString(payload.templateString); }
+  catch(err){ toast('Could not load project: '+err.message); return; }
+
+  document.getElementById('svgInput').value = payload.templateString;
+  templateString = payload.templateString;
+  templateDoc = result.doc;
+
+  const savedById = new Map((payload.schema||[]).map(f=>[f.id,f]));
+  schema = result.schema.map(f=>{
+    const saved = savedById.get(f.id);
+    return saved ? {...f, type:saved.type, wrapWidth:saved.wrapWidth, maxLines:saved.maxLines, excluded:saved.excluded} : f;
+  });
+
+  rowCounter = 0;
+  rows = (payload.data||[]).map(values=>{
+    const merged = {};
+    schema.forEach(f=> merged[f.id] = (f.id in values) ? values[f.id] : (f.type==='boolean'?true:f.defaultValue));
+    return {_rid: ++rowCounter, values: merged};
+  });
+  if(rows.length===0) addRow();
+
+  renderSchemaTable();
+  goStep(1);
+  if(!(opts&&opts.silent)) scheduleAutosave();
+}
+function exportProject(){
+  if(!templateDoc){ toast('Nothing to save yet — load and analyze a template first'); return; }
+  downloadBlob(new Blob([JSON.stringify(buildProjectBundle(),null,2)],{type:'application/json'}), 'card-project.json');
+}
+function importProject(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const payload = JSON.parse(reader.result);
+      if(!payload.templateString) throw new Error('Not a valid project file');
+      loadProjectBundle(payload);
+      toast('Project loaded');
+    }catch(err){ toast('Import failed: '+err.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+tryRestoreDraft();
+
+/* ---------------- Toast ---------------- */
+let toastTimer;
+let _toastAction = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span class="toast-msg">${msg}</span>`;
+  t.classList.remove('toast-action');
+  t.classList.add('show');
+  _toastAction = null;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function toastWithAction(msg, actionLabel, actionFn, duration){
+  const t = document.getElementById('toast');
+  _toastAction = actionFn;
+  t.innerHTML = `<span class="toast-msg">${msg}</span><button class="toast-btn" onclick="executeToastAction()">${actionLabel}</button>`;
+  t.classList.add('show','toast-action');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.classList.remove('show'); _toastAction=null; }, duration||5000);
+}
+function executeToastAction(){
+  if(_toastAction){ _toastAction(); _toastAction=null; }
+  document.getElementById('toast').classList.remove('show');
+}
+
+/* ---------------- Demo template ---------------- */
+const DEMO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="620" height="860" viewBox="0 0 620 860">
+<defs>
+<linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f8ff0"/><stop offset="1" stop-color="#1c4faa"/></linearGradient>
+<filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".25"/></filter>
+<symbol id="clockIcon" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8v8l6 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="boltIcon" viewBox="0 0 32 32"><path d="M18 2 6 18h8l-2 12 14-18h-9z" fill="currentColor"/></symbol>
+<pattern id="phPattern" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#ececec"/><path d="M0 0L24 24M24 0L0 24" stroke="#d0d0d0"/></pattern>
+</defs>
+<rect width="620" height="860" rx="30" fill="#fffefc" stroke="url(#blueGrad)" stroke-width="8"/>
+<rect width="620" height="110" rx="30" fill="url(#blueGrad)"/>
+<use href="#boltIcon" x="30" y="15" width="30" height="30" style="color:#ffe14d"/>
+<text id="name" data-type="text" x="310" y="66" text-anchor="middle" fill="white" font-size="30" font-weight="700" font-family="Verdana">ACTION NAME</text>
+<use href="#clockIcon" x="520" y="16" width="28" height="28" style="color:white"/>
+<text id="time" data-type="number" x="590" y="42" text-anchor="end" fill="white" font-size="24" font-family="Verdana">1</text>
+<rect x="40" y="140" width="540" height="390" rx="22" fill="url(#phPattern)" stroke="#7fa3d6"/>
+<image id="art" data-type="image" x="40" y="140" width="540" height="390" preserveAspectRatio="xMidYMid slice" href=""/>
+<rect x="30" y="560" width="560" height="260" rx="20" fill="#eef3fb" stroke="#7fa3d6"/>
+<text x="50" y="600" font-size="26" font-weight="700" font-family="Verdana" fill="#183055">Effect</text>
+<text id="effect" data-type="text" data-wrap-width="520" data-line-height="26" data-max-lines="6" x="50" y="645" font-size="20" font-family="Verdana" fill="#183055">Effect text goes here...</text>
+</svg>`;
+function loadDemo(){
+  document.getElementById('svgInput').value = DEMO_SVG;
+  toast("Demo template loaded");
+}
+
+/* ---------------- File upload / drop ---------------- */
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ document.getElementById('svgInput').value = reader.result; toast("Template loaded: "+f.name); };
+  reader.readAsText(f);
+});
+const dz = document.getElementById('dropZone');
+['dragover','dragleave','drop'].forEach(ev=>dz.addEventListener(ev, e=>e.preventDefault()));
+dz.addEventListener('dragover', ()=>dz.style.borderColor='var(--cyan)');
+dz.addEventListener('dragleave', ()=>dz.style.borderColor='var(--border-bright)');
+dz.addEventListener('drop', e=>{
+  dz.style.borderColor='var(--border-bright)';
+  const f = e.dataTransfer.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ document.getElementById('svgInput').value = reader.result; toast("Template loaded: "+f.name); };
+  reader.readAsText(f);
+});
+
+/* ---------------- Analyze ---------------- */
+function analyzeSVGString(raw){
+  const doc = new DOMParser().parseFromString(raw, "image/svg+xml");
+  if(doc.querySelector('parsererror')) throw new Error("Invalid SVG markup");
+  const svgRoot = doc.documentElement;
+  const all = Array.from(svgRoot.querySelectorAll('[id]')).filter(el => !el.closest('defs'));
+  const newSchema = [];
+  all.forEach(el=>{
+    const id = el.getAttribute('id');
+    const tag = el.tagName.toLowerCase();
+    let type = el.getAttribute('data-type');
+    let defaultValue = "";
+    if(!type){
+      if(tag==='text' || tag==='tspan'){
+        const txt = (el.textContent||"").trim();
+        type = /^-?\d+(\.\d+)?$/.test(txt) ? 'number' : 'text';
+        defaultValue = txt;
+      } else if(tag==='image'){
+        type='image'; defaultValue = el.getAttribute('href') || el.getAttributeNS('http://www.w3.org/1999/xlink','href') || "";
+      } else if(['rect','circle','ellipse','path','polygon','line','g'].includes(tag)){
+        type='color'; defaultValue = el.getAttribute('fill') || "#cccccc";
+      } else {
+        type='text'; defaultValue = el.textContent||"";
+      }
+    } else {
+      if(type==='text' || type==='number') defaultValue = (el.textContent||"").trim();
+      else if(type==='image') defaultValue = el.getAttribute('href') || "";
+      else if(type==='color') defaultValue = el.getAttribute('fill') || "#cccccc";
+      else if(type==='boolean') defaultValue = true;
+    }
+    if(type==='color' && (!defaultValue || defaultValue.startsWith('url('))) defaultValue = "#cccccc";
+    const wrapWidth = el.hasAttribute('data-wrap-width') ? parseFloat(el.getAttribute('data-wrap-width')) : null;
+    const lineHeight = el.hasAttribute('data-line-height') ? parseFloat(el.getAttribute('data-line-height')) : null;
+    const maxLines = el.hasAttribute('data-max-lines') ? parseInt(el.getAttribute('data-max-lines'),10) : null;
+    newSchema.push({id, tag, type, defaultValue, wrapWidth, lineHeight, maxLines});
+  });
+  return {doc, schema: newSchema};
+}
+
+function runAnalyze(){
+  const raw = document.getElementById('svgInput').value.trim();
+  if(!raw){ toast("Paste or upload an SVG first"); return; }
+  let result;
+  try{ result = analyzeSVGString(raw); }
+  catch(err){ toast("Could not parse SVG: "+err.message); return; }
+
+  if(result.schema.length===0){
+    toast("No tagged elements found — add id attributes to elements you want as fields");
+    return;
+  }
+
+  // Check for duplicate IDs
+  const idCounts = {};
+  const allEls = result.doc.documentElement.querySelectorAll('[id]');
+  allEls.forEach(el=>{ if(!el.closest('defs')){ const id=el.getAttribute('id'); idCounts[id]=(idCounts[id]||0)+1; } });
+  const dups = Object.entries(idCounts).filter(([,c])=>c>1).map(([id])=>id);
+  if(dups.length > 0){
+    toast(`⚠ Duplicate IDs found: ${dups.join(', ')} — substitutions will only hit the first match`);
+  }
+
+  const isReanalyze = schema.length > 0;
+  const oldById = new Map(schema.map(f=>[f.id, f]));
+  const mergedSchema = result.schema.map(f=>{
+    const old = oldById.get(f.id);
+    // keep prior customizations (type override, wrap settings, excluded) for fields that still exist
+    return old ? {...f, type: old.type, wrapWidth: old.wrapWidth, maxLines: old.maxLines, excluded: old.excluded} : f;
+  });
+
+  templateString = raw;
+  templateDoc = result.doc;
+  schema = mergedSchema;
+
+  if(isReanalyze){
+    // re-map existing rows onto the new field set instead of wiping them
+    rows = rows.map(r=>{
+      const values = {};
+      schema.forEach(f=> values[f.id] = (f.id in r.values) ? r.values[f.id] : (f.type==='boolean'?true:f.defaultValue));
+      return {_rid:r._rid, values};
+    });
+    if(rows.length===0) addRow();
+    toast(`Re-analyzed — ${schema.length} field${schema.length>1?'s':''}, kept ${rows.length} row${rows.length>1?'s':''} of data`);
+  } else {
+    rows = []; rowCounter=0; addRow(); // seed one row with defaults
+    toast(`Found ${schema.length} field${schema.length>1?'s':''}`);
+  }
+  renderSchemaTable();
+  goStep(1);
+  scheduleAutosave();
+}
+
+/* ---------------- Schema table ---------------- */
+const TYPE_OPTIONS = ['text','number','color','image','boolean'];
+function renderSchemaTable(){
+  const wrap = document.getElementById('schemaTableWrap');
+  if(schema.length===0){ wrap.innerHTML = `<div class="empty-state">No schema yet — analyze a template first.</div>`; return; }
+  wrap.innerHTML = `
+  <div class="grid-scroll"><table>
+    <thead><tr><th>Field id</th><th>Source tag</th><th>Type</th><th>Line length</th><th>Max lines</th><th>Default</th><th>In editor</th></tr></thead>
+    <tbody>
+    ${schema.map((f,i)=>`
+      <tr${f.excluded?' style="opacity:.55;"':''}>
+        <td><span class="id-pill">${f.id}</span></td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">&lt;${f.tag}&gt;</td>
+        <td>
+          <select onchange="changeFieldType(${i}, this.value)" ${f.excluded?'disabled':''}>
+            ${TYPE_OPTIONS.map(t=>`<option value="${t}" ${t===f.type?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <input class="cell-input" type="number" min="0" step="10" style="width:90px" placeholder="no wrap"
+            value="${f.wrapWidth||''}" ${f.type!=='text'||f.excluded?'disabled':''}
+            title="Wrap text to this many px wide, using tspans"
+            oninput="setFieldWrap(${i},'wrapWidth', this.value)">
+          <span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);">px</span>
+        </td>
+        <td>
+          <input class="cell-input" type="number" min="1" step="1" style="width:64px" placeholder="∞"
+            value="${f.maxLines||''}" ${f.type!=='text'||f.excluded||!f.wrapWidth?'disabled':''}
+            title="Truncate with … after this many lines"
+            oninput="setFieldWrap(${i},'maxLines', this.value)">
+        </td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--text-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;">${String(f.defaultValue).slice(0,40)||'—'}</td>
+        <td style="text-align:center;">
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);white-space:nowrap;">
+            <input type="checkbox" ${f.excluded?'':'checked'} onchange="toggleFieldExcluded(${i}, !this.checked)">
+            ${f.excluded?'excluded':'shown'}
+          </label>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>
+  <div class="help-note" style="margin-top:16px;">Line length sets how wide text can run before it wraps to a new line — this rewrites the field as multiple <code>&lt;tspan&gt;</code> lines at export time, no need to edit the SVG by hand. Leave it blank for fields that should always stay on one line (like a title).</div>`;
+}
+function setFieldWrap(i, key, rawVal){
+  const n = rawVal==='' ? null : Math.max(0, parseInt(rawVal,10)||0);
+  schema[i][key] = n || null;
+  if(key==='wrapWidth' && !n) schema[i].maxLines = null; // clearing wrap width also clears max lines
+  renderSchemaTable();
+  if(currentStep===2) renderDataTable();
+  if(currentStep===3) renderPreview();
+  scheduleAutosave();
+}
+function toggleFieldExcluded(i, excluded){
+  schema[i].excluded = excluded;
+  if(excluded){
+    // reset every row's value for this field back to its default whenever it's excluded
+    const f = schema[i];
+    const defVal = f.type==='boolean' ? true : f.defaultValue;
+    rows.forEach(r=> r.values[f.id] = defVal);
+  }
+  renderSchemaTable();
+  renderDataTable();
+  scheduleAutosave();
+}
+function changeFieldType(i, val){
+  schema[i].type = val;
+  if(val==='color' && !String(schema[i].defaultValue).startsWith('#')) schema[i].defaultValue = '#cccccc';
+  if(val==='boolean') schema[i].defaultValue = true;
+  renderSchemaTable();
+  scheduleAutosave();
+}
+
+/* ---------------- Data rows ---------------- */
+function blankRowValues(){
+  const v = {};
+  schema.forEach(f=> v[f.id] = f.type==='boolean' ? true : f.defaultValue);
+  return v;
+}
+function addRow(){
+  rows.push({_rid: ++rowCounter, values: blankRowValues()});
+  if(currentStep===2) renderDataTable();
+  scheduleAutosave();
+}
+function removeRow(rid, silent){
+  const idx = rows.findIndex(r=>r._rid===rid);
+  if(idx===-1) return;
+  const [deleted] = rows.splice(idx, 1);
+  renderDataTable();
+  scheduleAutosave();
+  if(!silent){
+    const undoFn = function(){ rows.splice(idx,0,deleted); renderDataTable(); scheduleAutosave(); };
+    toastWithAction('Row deleted', 'Undo', undoFn, 5000);
+  }
+}
+function duplicateRow(rid){
+  const idx = rows.findIndex(r=>r._rid===rid);
+  if(idx===-1) return;
+  const copy = {_rid: ++rowCounter, values: {...rows[idx].values}};
+  rows.splice(idx+1, 0, copy);
+  renderDataTable();
+  toast('Row duplicated');
+  scheduleAutosave();
+}
+function moveRow(rid, dir){
+  const idx = rows.findIndex(r=>r._rid===rid);
+  if(idx===-1) return;
+  const target = idx+dir;
+  if(target<0 || target>=rows.length) return;
+  [rows[idx], rows[target]] = [rows[target], rows[idx]];
+  renderDataTable();
+  scheduleAutosave();
+}
+function escapeHtml(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function getFieldFontInfo(f){
+  const el = templateDoc ? templateDoc.documentElement.querySelector(`#${CSS.escape(f.id)}`) : null;
+  return {
+    fontSize: el ? (parseFloat(el.getAttribute('font-size'))||16) : 16,
+    fontFamily: el ? (el.getAttribute('font-family')||'sans-serif') : 'sans-serif',
+    fontWeight: el ? (el.getAttribute('font-weight')||'400') : '400'
+  };
+}
+function lineCountFor(f, text){
+  if(!f.wrapWidth) return null;
+  const {fontSize, fontFamily, fontWeight} = getFieldFontInfo(f);
+  return wrapTextToLines(text||'', f.wrapWidth, fontSize, fontFamily, fontWeight, f.maxLines).length;
+}
+function updateLineCountDisplay(rid, fieldId){
+  const f = schema.find(s=>s.id===fieldId); if(!f) return;
+  const r = rows.find(r=>r._rid===rid); if(!r) return;
+  const el = document.getElementById(`lc_${rid}_${fieldId}`); if(!el) return;
+  const lc = lineCountFor(f, r.values[fieldId]);
+  const over = f.maxLines && lc>=f.maxLines;
+  el.textContent = `${lc} line${lc===1?'':'s'}${f.maxLines?' / '+f.maxLines+' max':''}`;
+  el.style.color = over ? 'var(--amber)' : 'var(--text-dim)';
+}
+function renderDataTable(){
+  const table = document.getElementById('dataTable');
+  if(schema.length===0){ table.innerHTML=''; return; }
+  const editableFields = schema.filter(f=>!f.excluded);
+  if(editableFields.length===0){
+    table.innerHTML = `<tbody><tr><td style="text-align:center;color:var(--text-dim);font-family:var(--mono);padding:24px;">Every field is excluded from the editor — all ${rows.length} row${rows.length===1?'':'s'} will render with default values. Go back to step 2 to re-include a field.</td></tr></tbody>`;
+    return;
+  }
+  const head = `<thead><tr><th>#</th>${editableFields.map(f=>{
+    const bulkBtn = `<button class="bulk-btn" title="Set value for all rows" onclick="bulkFillColumn('${f.id}')">✎</button>`;
+    if(f.type!=='text') return `<th>${f.id}${bulkBtn}</th>`;
+    const idx = schema.indexOf(f);
+    return `<th>${f.id}${bulkBtn}<br><input type="number" min="0" step="10" value="${f.wrapWidth||''}" placeholder="no wrap"
+      class="cell-input" style="width:78px;margin-top:5px;font-size:10.5px;font-weight:400;text-transform:none;letter-spacing:0;"
+      title="Line length in px — leave blank to keep this field on one line"
+      onchange="setFieldWrap(${idx},'wrapWidth', this.value)"></th>`;
+  }).join('')}<th></th></tr></thead>`;
+  const body = rows.map((r,ri)=>{
+    const cells = editableFields.map(f=>{
+      const val = r.values[f.id];
+      const cellId = `cell_${r._rid}_${f.id}`;
+      if(f.type==='color'){
+        return `<td><input type="color" value="${val||'#cccccc'}" oninput="setCell(${r._rid},'${f.id}',this.value)"></td>`;
+      }
+      if(f.type==='boolean'){
+        return `<td><input type="checkbox" ${val?'checked':''} onchange="setCell(${r._rid},'${f.id}',this.checked)"></td>`;
+      }
+      if(f.type==='image'){
+        const thumb = val ? `<img src="${val}">` : '';
+        const warn = !val ? `<div class="missing-img-warn">no image set</div>` : '';
+        return `<td><div class="asset-cell">
+          <button class="thumb-btn" onclick="document.getElementById('${cellId}_file').click()">${thumb}</button>
+          <input type="file" id="${cellId}_file" accept="image/*" style="display:none" onchange="setCellImage(event,${r._rid},'${f.id}')">
+          <input class="cell-input asset-url" placeholder="or paste URL" value="${(val||'').startsWith('data:')?'':(val||'')}" oninput="setCell(${r._rid},'${f.id}',this.value)">
+        </div>${warn}</td>`;
+      }
+      if(f.type==='number'){
+        return `<td><input class="cell-input" type="number" style="width:90px" value="${val}" oninput="setCell(${r._rid},'${f.id}',this.value)"></td>`;
+      }
+      if(f.type==='text' && f.wrapWidth){
+        const lc = lineCountFor(f, val);
+        const over = f.maxLines && lc>=f.maxLines;
+        return `<td>
+          <textarea class="cell-input" rows="3" style="min-width:180px;resize:vertical;font-family:var(--ui);"
+            oninput="setCell(${r._rid},'${f.id}',this.value); updateLineCountDisplay(${r._rid},'${f.id}')">${escapeHtml(val)}</textarea>
+          <div id="lc_${r._rid}_${f.id}" style="font-family:var(--mono);font-size:10.5px;color:${over?'var(--amber)':'var(--text-dim)'};margin-top:3px;">${lc} line${lc===1?'':'s'}${f.maxLines?' / '+f.maxLines+' max':''}</div>
+        </td>`;
+      }
+      return `<td><input class="cell-input" style="min-width:140px" type="text" value="${escapeAttr(val)}" oninput="setCell(${r._rid},'${f.id}',this.value)"></td>`;
+    }).join('');
+    const isFirst = ri===0, isLast = ri===rows.length-1;
+    return `<tr><td class="row-idx">${ri+1}</td>${cells}<td style="white-space:nowrap;">
+<button class="reorder-btn" title="Move up" onclick="moveRow(${r._rid},-1)" ${isFirst?'disabled':''}>▲</button>
+<button class="reorder-btn" title="Move down" onclick="moveRow(${r._rid},1)" ${isLast?'disabled':''}>▼</button>
+<button class="btn btn-ghost btn-sm" title="Duplicate row" onclick="duplicateRow(${r._rid})">⧉</button>
+<button class="btn btn-danger btn-sm" title="Delete row" onclick="removeRow(${r._rid})">✕</button></td></tr>`;
+  }).join('');
+  table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${editableFields.length+2}" style="text-align:center;color:var(--text-dim);font-family:var(--mono);padding:24px;">No rows yet — click "Add row"</td></tr>`}</tbody>`;
+}
+function escapeAttr(s){ return String(s??'').replace(/"/g,'&quot;'); }
+function setCell(rid, fieldId, value){
+  const r = rows.find(r=>r._rid===rid); if(!r) return;
+  r.values[fieldId] = value;
+  scheduleAutosave();
+}
+function setCellImage(evt, rid, fieldId){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ setCell(rid, fieldId, reader.result); renderDataTable(); };
+  reader.readAsDataURL(file);
+}
+function bulkFillColumn(fieldId){
+  const f = schema.find(s=>s.id===fieldId); if(!f) return;
+  const current = rows.length>0 ? rows[0].values[fieldId] : '';
+  const promptMsg = `Enter value for "${fieldId}" (${f.type}):\n\nLeave empty to use the field default.`;
+  const input = prompt(promptMsg, current ?? '');
+  if(input===null) return;
+  const val = input === '' ? (f.type==='boolean'?true:f.defaultValue) : input;
+  rows.forEach(r=> r.values[fieldId] = val);
+  renderDataTable();
+  toast(`Set "${fieldId}" to "${String(val).slice(0,30)}" for all ${rows.length} row${rows.length===1?'':'s'}`);
+  scheduleAutosave();
+}
+
+/* ---------------- Import / export data ---------------- */
+function importJSON(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const arr = JSON.parse(reader.result);
+      if(!Array.isArray(arr)) throw new Error("JSON must be an array of objects");
+      rows = arr.map(obj=>{
+        const values = blankRowValues();
+        schema.forEach(f=>{ if(!f.excluded && obj[f.id]!==undefined) values[f.id]=obj[f.id]; });
+        return {_rid: ++rowCounter, values};
+      });
+      renderDataTable();
+      toast(`Imported ${rows.length} rows`);
+      scheduleAutosave();
+    }catch(err){ toast("Import failed: "+err.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+function importCSV(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  Papa.parse(file, {
+    header:true, skipEmptyLines:true,
+    complete: (res)=>{
+      rows = res.data.map(obj=>{
+        const values = blankRowValues();
+        schema.forEach(f=>{ if(!f.excluded && obj[f.id]!==undefined) values[f.id]=obj[f.id]; });
+        return {_rid: ++rowCounter, values};
+      });
+      renderDataTable();
+      toast(`Imported ${rows.length} rows from CSV`);
+      scheduleAutosave();
+    },
+    error: (err)=> toast("CSV import failed: "+err.message)
+  });
+  evt.target.value = '';
+}
+function exportJSON(){
+  const data = rows.map(r=>r.values);
+  downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}), 'card-data.json');
+}
+function exportCSV(){
+  const fields = schema.filter(f=>!f.excluded);
+  const data = rows.map(r=>{
+    const obj = {};
+    fields.forEach(f=> obj[f.id] = r.values[f.id]);
+    return obj;
+  });
+  const csv = Papa.unparse(data, {columns: fields.map(f=>f.id)});
+  downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}), 'card-data.csv');
+}
+
+/* ---------------- Text wrapping ---------------- */
+let _measureCanvas;
+function measureTextWidth(text, fontSize, fontFamily, fontWeight){
+  if(!_measureCanvas) _measureCanvas = document.createElement('canvas');
+  const ctx = _measureCanvas.getContext('2d');
+  ctx.font = `${fontWeight||400} ${fontSize}px ${fontFamily||'sans-serif'}`;
+  return ctx.measureText(text).width;
+}
+function wrapTextToLines(text, maxWidth, fontSize, fontFamily, fontWeight, maxLines){
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+  for(const word of words){
+    const test = current ? current + ' ' + word : word;
+    if(current && measureTextWidth(test, fontSize, fontFamily, fontWeight) > maxWidth){
+      lines.push(current);
+      current = word;
+      if(maxLines && lines.length >= maxLines) break;
+    } else {
+      current = test;
+    }
+  }
+  if(current && !(maxLines && lines.length >= maxLines)) lines.push(current);
+  if(maxLines && lines.length > maxLines) lines.length = maxLines;
+  if(maxLines && lines.length === maxLines){
+    // add an ellipsis if we truncated mid-text
+    const consumed = lines.join(' ').split(/\s+/).length;
+    if(consumed < words.length){
+      let last = lines[lines.length-1];
+      while(last.length && measureTextWidth(last+'…', fontSize, fontFamily, fontWeight) > maxWidth) last = last.slice(0,-1).trimEnd();
+      lines[lines.length-1] = last + '…';
+    }
+  }
+  return lines.length ? lines : [''];
+}
+function applyWrappedText(el, text, f){
+  const x = el.getAttribute('x') || '0';
+  const fontSize = parseFloat(el.getAttribute('font-size')) || 16;
+  const fontFamily = el.getAttribute('font-family') || 'sans-serif';
+  const fontWeight = el.getAttribute('font-weight') || '400';
+  const lineHeight = f.lineHeight || Math.round(fontSize * 1.25);
+  const lines = wrapTextToLines(text, f.wrapWidth, fontSize, fontFamily, fontWeight, f.maxLines);
+  while(el.firstChild) el.removeChild(el.firstChild);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  lines.forEach((line, li)=>{
+    const tspan = el.ownerDocument.createElementNS(svgNS, 'tspan');
+    tspan.setAttribute('x', x);
+    tspan.setAttribute('dy', li===0 ? '0' : String(lineHeight));
+    tspan.textContent = line;
+    el.appendChild(tspan);
+  });
+}
+
+/* ---------------- Rendering a card from template + row ---------------- */
+function renderCardSVGString(rowValues){
+  const clone = templateDoc.documentElement.cloneNode(true);
+  schema.forEach(f=>{
+    const el = clone.querySelector(`#${CSS.escape(f.id)}`);
+    if(!el) return;
+    const val = rowValues[f.id];
+    if(f.type==='text' && f.wrapWidth){
+      applyWrappedText(el, val ?? '', f);
+    } else if(f.type==='text' || f.type==='number'){
+      el.textContent = val ?? '';
+    } else if(f.type==='color'){
+      el.setAttribute('fill', val || '#cccccc');
+    } else if(f.type==='image'){
+      if(val){
+        el.setAttribute('href', val);
+        el.setAttributeNS('http://www.w3.org/1999/xlink','href', val);
+      }
+    } else if(f.type==='boolean'){
+      el.style.display = val ? '' : 'none';
+    }
+  });
+  return new XMLSerializer().serializeToString(clone);
+}
+
+/* ---------------- Preview ---------------- */
+function renderPreviewControls(){
+  const sel = document.getElementById('previewRowSelect');
+  sel.innerHTML = rows.map((r,i)=>`<option value="${r._rid}">Row ${i+1}</option>`).join('') || `<option>No rows</option>`;
+  renderPreview();
+}
+function renderPreview(){
+  const mount = document.getElementById('previewMount');
+  const summary = document.getElementById('previewFieldSummary');
+  if(rows.length===0 || !templateDoc){ mount.innerHTML = `<div style="color:var(--text-dim);font-family:var(--mono);font-size:12.5px;">No data to preview</div>`; summary.innerHTML=''; return; }
+  const sel = document.getElementById('previewRowSelect');
+  const rid = +sel.value || rows[0]._rid;
+  const row = rows.find(r=>r._rid===rid) || rows[0];
+  const svgStr = renderCardSVGString(row.values);
+  mount.innerHTML = svgStr;
+  summary.innerHTML = schema.map(f=>`<div class="field-label">${f.id}</div><div style="font-size:13px;color:var(--text);word-break:break-all;">${String(row.values[f.id]).slice(0,60)||'—'}</div>`).join('');
+}
+
+/* ---------------- Export helpers ---------------- */
+function getTemplateDims(){
+  const svgEl = templateDoc.documentElement;
+  const vb = svgEl.getAttribute('viewBox');
+  if(vb){ const p = vb.split(/\s+/).map(Number); return {w:p[2], h:p[3]}; }
+  return {w: parseFloat(svgEl.getAttribute('width'))||600, h: parseFloat(svgEl.getAttribute('height'))||800};
+}
+function rowFilename(row, idx, ext){
+  const pattern = (document.getElementById('filenamePattern')?.value||'').trim() || '{name}';
+  const patternMatch = pattern.match(/\{(\w+)\}/g);
+  if(patternMatch){
+    let name = pattern;
+    name = name.replace(/\{(\w+)\}/g, (_,fid)=>{
+      const f = schema.find(s=>s.id===fid);
+      if(!f) return `{${fid}}`;
+      let v = String(row.values[f.id]??'');
+      v = v.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      if(!v) v = fid;
+      return v;
+    });
+    name = name.replace(/[^a-z0-9_-]+/g,'-').replace(/(^-|-$)/g,'');
+    if(!name) name = `card-${idx+1}`;
+    return `${name}.${ext}`;
+  }
+  const nameField = schema.find(f=>f.id==='name' || f.id==='id' || f.id==='title');
+  let base = nameField ? String(row.values[nameField.id]||'') : '';
+  base = base.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  if(!base) base = `card-${idx+1}`;
+  return `${base}.${ext}`;
+}
+function showProgress(pct, text){
+  const wrap = document.getElementById('progressWrap');
+  wrap.classList.add('active');
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressText').textContent = text;
+}
+function hideProgress(){ document.getElementById('progressWrap').classList.remove('active'); }
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+function svgStringToPNGBlob(svgStr, w, h, scale){
+  return new Promise((resolve, reject)=>{
+    const blob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      canvas.width = w*scale; canvas.height = h*scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b=> b? resolve(b): reject(new Error('canvas.toBlob failed')), 'image/png');
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('Image failed to load (check external image URLs allow CORS)')); };
+    img.src = url;
+  });
+}
+function updateExportSummary(){
+  document.getElementById('exportSummary').textContent = rows.length
+    ? `Generate ${rows.length} card${rows.length>1?'s':''} as files.`
+    : `No rows yet — add data in step 3 first.`;
+}
+
+async function exportSVGs(){
+  if(!guardExport()) return;
+  _exportCanceled = false;
+  showCancelExportBtn();
+  const zip = new JSZip();
+  for(let i=0;i<rows.length;i++){
+    if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+    showProgress(Math.round((i/rows.length)*100), `Adding card ${i+1} of ${rows.length}…`);
+    zip.file(rowFilename(rows[i],i,'svg'), renderCardSVGString(rows[i].values));
+  }
+  showProgress(100,'Zipping SVGs…');
+  const blob = await zip.generateAsync({type:'blob'});
+  downloadBlob(blob, 'cards-svg.zip');
+  hideProgress(); hideCancelExportBtn();
+  toast('SVGs downloaded');
+}
+
+async function exportPNGs(){
+  if(!guardExport()) return;
+  _exportCanceled = false;
+  showCancelExportBtn();
+  const {w,h} = getTemplateDims();
+  const scale = +document.getElementById('pngScale').value;
+  const zip = new JSZip();
+  for(let i=0;i<rows.length;i++){
+    if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+    showProgress(Math.round((i/rows.length)*100), `Rendering card ${i+1} of ${rows.length}…`);
+    const svgStr = renderCardSVGString(rows[i].values);
+    try{
+      const pngBlob = await svgStringToPNGBlob(svgStr, w, h, scale);
+      zip.file(rowFilename(rows[i],i,'png'), pngBlob);
+    }catch(err){ toast('Error on row '+(i+1)+': '+err.message); }
+  }
+  showProgress(100,'Zipping PNGs…');
+  const blob = await zip.generateAsync({type:'blob'});
+  downloadBlob(blob, 'cards-png.zip');
+  hideProgress(); hideCancelExportBtn();
+  toast('PNGs downloaded');
+}
+
+async function exportPDF(){
+  if(!guardExport()) return;
+  _exportCanceled = false;
+  showCancelExportBtn();
+  const {w,h} = getTemplateDims();
+  const cols = Math.max(1, parseInt(document.getElementById('pdfCols').value)||3);
+  const rowsPerPage = Math.max(1, parseInt(document.getElementById('pdfRows').value)||3);
+  const showGuides = document.getElementById('pdfGuides').checked;
+  const cardsPerPage = cols * rowsPerPage;
+  const scale = 1.5;
+  const { jsPDF } = window.jspdf;
+  const margin = 36;
+  const gutter = showGuides ? 0 : 8;
+  const availW = (cols > 1) ? ((595.28 - margin*2 - gutter*(cols-1)) / cols) : (595.28 - margin*2);
+  const availH = (rowsPerPage > 1) ? ((841.89 - margin*2 - gutter*(rowsPerPage-1)) / rowsPerPage) : (841.89 - margin*2);
+  let cardW = Math.min(availW, w * (availH / h));
+  let cardH = cardW * (h / w);
+  if(cardW > availW || cardH > availH){
+    const scale2 = Math.min(availW/w, availH/h);
+    cardW = w * scale2;
+    cardH = h * scale2;
+  }
+  const totalCards = rows.length;
+  const totalPages = Math.ceil(totalCards / cardsPerPage);
+  const pdf = new jsPDF({orientation:'p', unit:'pt', format:'a4'});
+  let cardIdx = 0;
+  for(let page=0; page<totalPages; page++){
+    if(page>0) pdf.addPage();
+    for(let r=0; r<rowsPerPage && cardIdx<totalCards; r++){
+      for(let c=0; c<cols && cardIdx<totalCards; c++){
+        if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+        const x = margin + c * (cardW + gutter);
+        const y = margin + r * (cardH + gutter);
+        showProgress(Math.round((cardIdx/totalCards)*100), `Rendering card ${cardIdx+1} of ${totalCards}…`);
+        const svgStr = renderCardSVGString(rows[cardIdx].values);
+        try{
+          const pngBlob = await svgStringToPNGBlob(svgStr, w, h, scale);
+          const dataUrl = await blobToDataURL(pngBlob);
+          pdf.addImage(dataUrl, 'PNG', x, y, cardW, cardH);
+        }catch(err){ toast('Error on row '+(cardIdx+1)+': '+err.message); }
+        cardIdx++;
+      }
+    }
+    if(showGuides && cardsPerPage>1){
+      pdf.setDrawColor(180,180,180);
+      pdf.setLineWidth(0.5);
+      pdf.setLineDashPattern([4,4],0);
+      for(let r=1; r<rowsPerPage; r++){
+        const y = margin + r * (cardH + gutter) - gutter/2;
+        pdf.line(margin, y, margin + cols*(cardW+gutter)-gutter, y);
+      }
+      for(let c=1; c<cols; c++){
+        const x = margin + c * (cardW + gutter) - gutter/2;
+        pdf.line(x, margin, x, margin + rowsPerPage*(cardH+gutter)-gutter);
+      }
+      pdf.setLineDashPattern([],0);
+    }
+  }
+  showProgress(100,'Saving PDF…');
+  pdf.save('cards.pdf');
+  hideProgress(); hideCancelExportBtn();
+  toast('PDF downloaded');
+}
+function blobToDataURL(blob){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+function guardExport(){
+  if(!templateDoc || schema.length===0){ toast('Analyze a template first'); return false; }
+  if(rows.length===0){ toast('Add at least one data row first'); return false; }
+  return true;
+}
+function showCancelExportBtn(){ document.getElementById('cancelExportBtn').style.display='inline-block'; }
+function hideCancelExportBtn(){ document.getElementById('cancelExportBtn').style.display='none'; }
+let _exportCanceled = false;
+function cancelExport(){
+  _exportCanceled = true;
+  hideCancelExportBtn();
+  toast('Cancelling…');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project — Ludical Studio</title>
+<meta name="description" content="Ludical Studio board game project details.">
+<link rel="icon" href="images/logo-mark.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .project-hero {
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    color: var(--cream);
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-hero h1 {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-shadow: 0 3px 0 var(--red-dark);
+  }
+  .project-hero .subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+  }
+  .project-hero .emoji-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .project-hero .emoji-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .project-detail-body {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .project-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .project-meta .meta-badge {
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .project-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+  .project-desc {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: #555;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--red);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-bottom: 20px;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-wrap">
+    <a href="index.html" class="brand">
+      <img src="images/logo-mark.png" alt="Ludical Studio logo">
+      Ludical Studio
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li class="nav-primary" style="display:contents">
+        <a href="index.html">Home</a>
+        <a href="projects.html" class="active">Projects</a>
+        <a href="about.html">About</a>
+      </li>
+      <li class="nav-social">
+        <a href="https://facebook.com/ludical.studio" aria-label="Facebook" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M13.5 22v-8.5H16l.4-3.4h-2.9V8c0-1 .3-1.6 1.7-1.6H16V3.4C15.6 3.4 14.5 3.2 13.3 3.2c-2.5 0-4.3 1.6-4.3 4.4v2.5H6.5V13.5H9V22h4.5z"/></svg>
+        </a>
+        <a href="https://youtube.com/@ludicalstudio" aria-label="YouTube" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M22 8.6c0-1.9-1.4-3.4-3.2-3.6C16.4 4.7 12 4.7 12 4.7s-4.4 0-6.8.3C3.4 5.2 2 6.7 2 8.6 1.8 10.4 1.8 12 1.8 12s0 1.6.2 3.4c0 1.9 1.4 3.4 3.2 3.6 2.4.3 6.8.3 6.8.3s4.4 0 6.8-.3c1.8-.2 3.2-1.7 3.2-3.6.2-1.8.2-3.4.2-3.4s0-1.6-.2-3.4zM9.9 15.3V8.7l6 3.3-6 3.3z"/></svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="section" style="padding-bottom:0;">
+    <div class="container">
+      <div id="projectContent"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    &copy; 2026 Ludical Studio. All rights reserved. &middot;
+    <a href="https://facebook.com/ludical.studio" target="_blank" rel="noopener">Facebook</a> &middot;
+    <a href="https://youtube.com/@ludicalstudio" target="_blank" rel="noopener">YouTube</a>
+  </div>
+</footer>
+
+<script src="data/projects.js"></script>
+<script src="js/script.js"></script>
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const content = document.getElementById('projectContent');
+
+  if (!id) {
+    content.innerHTML = '<p style="text-align:center; color:#888; padding:60px 0;">No project specified. <a href="projects.html" style="color:var(--red);">Browse projects</a></p>';
+    return;
+  }
+
+  const data = await fetchProjects();
+  const project = getProjectById(data.projects, id);
+
+  if (!project) {
+    content.innerHTML = '<p style="text-align:center; color:#888; padding:60px 0;">Project not found. <a href="projects.html" style="color:var(--red);">Browse projects</a></p>';
+    return;
+  }
+
+  document.title = project.name + ' — Ludical Studio';
+
+  const emojisHtml = (project.coverEmoji || [])
+    .map(e => '<div class="emoji-circle">' + e + '</div>')
+    .join('');
+
+  const metaParts = [];
+  if (project.players) metaParts.push('<div class="meta-badge">👥 ' + project.players + ' Players</div>');
+  if (project.playtime) metaParts.push('<div class="meta-badge">⏱ ' + project.playtime + '</div>');
+  if (project.age) metaParts.push('<div class="meta-badge">🔞 Ages ' + project.age + '</div>');
+
+  const actionsHtml = [
+    project.customButtonLabel && project.customButtonUrl
+      ? '<a href="' + project.customButtonUrl + '" target="_blank" rel="noopener" class="btn btn-primary">' + project.customButtonLabel + '</a>'
+      : '',
+    project.youtubeUrl
+      ? '<a href="' + project.youtubeUrl + '" target="_blank" rel="noopener" class="btn btn-outline">Watch on YouTube</a>'
+      : '',
+    project.rulebookUrl
+      ? '<a href="' + project.rulebookUrl + '" target="_blank" rel="noopener" class="btn btn-outline">View Rulebook</a>'
+      : '',
+    project.shopUrl
+      ? '<a href="' + project.shopUrl + '" target="_blank" rel="noopener" class="btn btn-dark">Buy Online</a>'
+      : ''
+  ].filter(Boolean).join('');
+
+  content.innerHTML = `
+    <a href="projects.html" class="back-link">← Back to Projects</a>
+
+    <div class="project-hero" style="background:${project.coverGradient};">
+      <span class="status-pill ${getStatusClass(project.status)}" style="margin-bottom:16px; display:inline-block;">${getStatusLabel(project.status)}</span>
+      <h1>${project.name}</h1>
+      <p class="subtitle">${project.description}</p>
+      ${emojisHtml ? '<div class="emoji-row">' + emojisHtml + '</div>' : ''}
+    </div>
+
+    <div class="project-detail-body">
+      ${metaParts.length ? '<div class="project-meta">' + metaParts.join('') + '</div>' : ''}
+
+      <div class="project-desc">
+        <p>${project.longDescription || project.description}</p>
+      </div>
+
+      ${actionsHtml ? '<div class="project-actions">' + actionsHtml + '</div>' : ''}
+    </div>
+  `;
+})();
+</script>
+</body>
+</html>

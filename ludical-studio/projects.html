@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Ludical Studio</title>
+<meta name="description" content="Explore Ludical Studio's board games — released, in development, and early prototypes.">
+<link rel="icon" href="images/logo-mark.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-wrap">
+    <a href="index.html" class="brand">
+      <img src="images/logo-mark.png" alt="Ludical Studio logo">
+      Ludical Studio
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li class="nav-primary" style="display:contents">
+        <a href="index.html">Home</a>
+        <a href="projects.html" class="active">Projects</a>
+        <a href="about.html">About</a>
+      </li>
+      <li class="nav-social">
+        <a href="https://facebook.com/ludical.studio" aria-label="Facebook" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M13.5 22v-8.5H16l.4-3.4h-2.9V8c0-1 .3-1.6 1.7-1.6H16V3.4C15.6 3.4 14.5 3.2 13.3 3.2c-2.5 0-4.3 1.6-4.3 4.4v2.5H6.5V13.5H9V22h4.5z"/></svg>
+        </a>
+        <a href="https://youtube.com/@ludicalstudio" aria-label="YouTube" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M22 8.6c0-1.9-1.4-3.4-3.2-3.6C16.4 4.7 12 4.7 12 4.7s-4.4 0-6.8.3C3.4 5.2 2 6.7 2 8.6 1.8 10.4 1.8 12 1.8 12s0 1.6.2 3.4c0 1.9 1.4 3.4 3.2 3.6 2.4.3 6.8.3 6.8.3s4.4 0 6.8-.3c1.8-.2 3.2-1.7 3.2-3.6.2-1.8.2-3.4.2-3.4s0-1.6-.2-3.4zM9.9 15.3V8.7l6 3.3-6 3.3z"/></svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="section" style="padding-bottom:0;">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow-line">Our Projects</div>
+        <h2>Explore our games and prototypes</h2>
+        <p>From early paper prototypes to games ready for the table — here's everything we're working on.</p>
+      </div>
+
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="released">Released</button>
+        <button class="filter-btn" data-filter="development">In Development</button>
+        <button class="filter-btn" data-filter="prototype">Prototypes</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="project-grid" id="projectGrid"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    &copy; 2026 Ludical Studio. All rights reserved. &middot;
+    <a href="https://facebook.com/ludical.studio" target="_blank" rel="noopener">Facebook</a> &middot;
+    <a href="https://youtube.com/@ludicalstudio" target="_blank" rel="noopener">YouTube</a>
+  </div>
+</footer>
+
+<script src="data/projects.js"></script>
+<script src="js/script.js"></script>
+<script>
+(async () => {
+  const data = await fetchProjects();
+  const projects = data.projects;
+
+  function renderProjectCardWithView(project) {
+    const metaParts = [];
+    if (project.players) metaParts.push('👥 ' + project.players);
+    if (project.playtime) metaParts.push('⏱ ' + project.playtime);
+    if (project.age) metaParts.push('🔞 Ages ' + project.age);
+
+    const metaHtml = metaParts.length
+      ? '<div class="meta-row">' + metaParts.map(m => '<span>' + m + '</span>').join('') + '</div>'
+      : '';
+
+    const customBtn = project.customButtonLabel && project.customButtonUrl
+      ? '<a href="' + project.customButtonUrl + '" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:10px; padding:10px 20px; font-size:0.85rem;">' + project.customButtonLabel + '</a>'
+      : '';
+
+    const viewBtn = '<a href="project.html?id=' + project.id + '" class="btn btn-outline" style="margin-top:14px; padding:10px 20px; font-size:0.85rem;">View</a>';
+
+    return `
+      <div class="project-card" data-status="${project.status}" data-id="${project.id}">
+        <div class="thumb" style="background:${project.coverGradient};">${project.name}</div>
+        <div class="body">
+          <span class="status-pill ${getStatusClass(project.status)}">${getStatusLabel(project.status)}</span>
+          <h3>${project.name}</h3>
+          <p class="desc">${project.description}</p>
+          ${metaHtml}
+          ${customBtn}
+          ${viewBtn}
+        </div>
+      </div>
+    `;
+  }
+
+  const grid = document.getElementById('projectGrid');
+  if (projects.length) {
+    grid.innerHTML = projects.map(renderProjectCardWithView).join('');
+  }
+
+  grid.innerHTML += `
+    <div class="coming-soon" data-status="all">
+      <div class="plus">+</div>
+      More Coming Soon!
+    </div>
+  `;
+
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('#projectGrid > [data-status]');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      cards.forEach(card => {
+        const status = card.dataset.status;
+        const show = filter === 'all' || status === 'all' || status === filter;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Manager — Ludical Studio</title>
+<link rel="icon" href="images/logo-mark.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .cms-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    min-height: calc(100vh - 140px);
+  }
+  .cms-sidebar {
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .cms-sidebar h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin: 0 0 14px;
+  }
+  .cms-project-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    transition: all 0.15s ease;
+  }
+  .cms-project-item:hover {
+    border-color: var(--red);
+  }
+  .cms-project-item.active {
+    border-color: var(--red);
+    background: white;
+  }
+  .cms-project-item .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cms-project-item .item-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .cms-project-item .item-status {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #888;
+  }
+  .cms-form {
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .cms-form h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin: 0 0 20px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+  .form-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .form-group input[type="text"],
+  .form-group input[type="url"],
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .form-group .hint {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 4px;
+  }
+  .form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .form-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--red);
+  }
+  .form-check label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+  .cms-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+  }
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.82rem;
+  }
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+  }
+  .btn-success {
+    background: #28a745;
+    color: white;
+    border: none;
+  }
+  .cover-preview {
+    width: 100%;
+    height: 120px;
+    border-radius: 10px;
+    border: 2px dashed #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #888;
+  }
+  .cover-preview.has-preview {
+    color: white;
+    font-weight: 700;
+    font-family: var(--font-display);
+    border: none;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+  }
+  .empty-state p {
+    margin: 10px 0 0;
+    font-size: 0.9rem;
+  }
+  .json-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .json-area {
+    width: 100%;
+    min-height: 200px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    resize: vertical;
+    margin-top: 8px;
+  }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal-box {
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal-box h3 {
+    font-family: var(--font-display);
+    margin: 0 0 16px;
+  }
+  @media (max-width: 860px) {
+    .cms-layout { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-wrap">
+    <a href="index.html" class="brand">
+      <img src="images/logo-mark.png" alt="Ludical Studio logo">
+      Ludical Studio
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li class="nav-primary" style="display:contents">
+        <a href="index.html">Home</a>
+        <a href="projects.html">Projects</a>
+        <a href="about.html">About</a>
+      </li>
+      <li class="nav-social">
+        <a href="https://facebook.com/ludical.studio" aria-label="Facebook" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M13.5 22v-8.5H16l.4-3.4h-2.9V8c0-1 .3-1.6 1.7-1.6H16V3.4C15.6 3.4 14.5 3.2 13.3 3.2c-2.5 0-4.3 1.6-4.3 4.4v2.5H6.5V13.5H9V22h4.5z"/></svg>
+        </a>
+        <a href="https://youtube.com/@ludicalstudio" aria-label="YouTube" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M22 8.6c0-1.9-1.4-3.4-3.2-3.6C16.4 4.7 12 4.7 12 4.7s-4.4 0-6.8.3C3.4 5.2 2 6.7 2 8.6 1.8 10.4 1.8 12 1.8 12s0 1.6.2 3.4c0 1.9 1.4 3.4 3.2 3.6 2.4.3 6.8.3 6.8.3s4.4 0 6.8-.3c1.8-.2 3.2-1.7 3.2-3.6.2-1.8.2-3.4.2-3.4s0-1.6-.2-3.4zM9.9 15.3V8.7l6 3.3-6 3.3z"/></svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="section" style="padding-bottom:0;">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow-line">Content Manager</div>
+        <h2>Manage Projects</h2>
+        <p>Add, edit, and manage your game projects. Download the updated JSON when ready.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="cms-layout">
+      <aside class="cms-sidebar">
+        <h3>Projects</h3>
+        <div id="projectList"></div>
+        <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px;" onclick="addNewProject()">+ Add Project</button>
+        <div class="json-actions">
+          <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openJsonModal()">Import JSON</button>
+          <button class="btn btn-success btn-sm" style="flex:1;" onclick="downloadJson()">Download JSON</button>
+        </div>
+      </aside>
+
+      <div class="cms-form" id="cmsForm">
+        <div class="empty-state" id="emptyState">
+          <div style="font-size:2rem;">📋</div>
+          <p>Select a project to edit, or add a new one.</p>
+        </div>
+        <div id="formContent" style="display:none;">
+          <h2 id="formTitle">Edit Project</h2>
+          <input type="hidden" id="editId">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Project Name *</label>
+              <input type="text" id="fName" required>
+            </div>
+            <div class="form-group">
+              <label>Status *</label>
+              <select id="fStatus">
+                <option value="prototype">Prototype</option>
+                <option value="development">In Development</option>
+                <option value="released">Released</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full">
+              <label>Short Description *</label>
+              <textarea id="fDesc" rows="2"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full">
+              <label>Long Description</label>
+              <textarea id="fLongDesc" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cover Gradient Start Color</label>
+              <input type="text" id="fGradStart" placeholder="#AF1215">
+            </div>
+            <div class="form-group">
+              <label>Cover Gradient End Color</label>
+              <input type="text" id="fGradEnd" placeholder="#D42E33">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cover Image URL (optional)</label>
+              <input type="url" id="fCoverImage" placeholder="https://...">
+              <div class="hint">If set, image will be used instead of gradient</div>
+            </div>
+            <div class="form-group">
+              <label>Cover Emojis (comma-separated)</label>
+              <input type="text" id="fEmojis" placeholder="🍔, 🍳, 🍹">
+            </div>
+          </div>
+
+          <div class="cover-preview" id="coverPreview">Cover Preview</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Players</label>
+              <input type="text" id="fPlayers" placeholder="1–4">
+            </div>
+            <div class="form-group">
+              <label>Play Time</label>
+              <input type="text" id="fPlaytime" placeholder="30–45 Min">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Age</label>
+              <input type="text" id="fAge" placeholder="10+">
+            </div>
+            <div class="form-group">
+              <label>HTML Prototype File</label>
+              <input type="text" id="fPrototypeFile" placeholder="prototypes/my-game.html">
+              <div class="hint">Path to playable HTML file (for Play page)</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>YouTube Video URL</label>
+              <input type="url" id="fYoutube" placeholder="https://youtube.com/watch?v=...">
+            </div>
+            <div class="form-group">
+              <label>Rulebook URL</label>
+              <input type="url" id="fRulebook" placeholder="https://...">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Shop URL</label>
+              <input type="url" id="fShop" placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label>Custom Button Label</label>
+              <input type="text" id="fCustomLabel" placeholder="Watch Video">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Custom Button URL</label>
+              <input type="url" id="fCustomUrl" placeholder="https://...">
+            </div>
+            <div class="form-group"></div>
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" id="fFeatured">
+            <label for="fFeatured">Featured on Home Page (limit 1)</label>
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" id="fShowOnTable">
+            <label for="fShowOnTable">Show in "On the Table" section (limit 3)</label>
+          </div>
+
+          <div class="cms-actions">
+            <button class="btn btn-primary btn-sm" onclick="saveProject()">Save Project</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProject()">Delete</button>
+            <button class="btn btn-outline btn-sm" onclick="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-overlay" id="jsonModal">
+  <div class="modal-box">
+    <h3>Import / Export JSON</h3>
+    <p style="font-size:0.85rem; color:#666; margin-bottom:12px;">Paste your <code>projects.json</code> content below to import, or copy the current data.</p>
+    <textarea class="json-area" id="jsonArea"></textarea>
+    <div style="display:flex; gap:10px; margin-top:14px;">
+      <button class="btn btn-primary btn-sm" onclick="importJson()">Import</button>
+      <button class="btn btn-outline btn-sm" onclick="copyJson()">Copy to Clipboard</button>
+      <button class="btn btn-outline btn-sm" onclick="closeJsonModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    &copy; 2026 Ludical Studio. All rights reserved. &middot;
+    <a href="https://facebook.com/ludical.studio" target="_blank" rel="noopener">Facebook</a> &middot;
+    <a href="https://youtube.com/@ludicalstudio" target="_blank" rel="noopener">YouTube</a>
+  </div>
+</footer>
+
+<script src="data/projects.js"></script>
+<script src="js/script.js"></script>
+<script>
+let projects = [];
+let currentEditIndex = -1;
+
+const defaultProject = () => ({
+  id: '',
+  name: '',
+  status: 'prototype',
+  coverGradient: 'linear-gradient(160deg, #AF1215, #D42E33)',
+  coverImage: null,
+  coverEmoji: [],
+  description: '',
+  longDescription: '',
+  players: '',
+  playtime: '',
+  age: '',
+  featured: false,
+  showOnTable: false,
+  prototypeFile: null,
+  rulebookUrl: null,
+  youtubeUrl: null,
+  shopUrl: null,
+  customButtonLabel: null,
+  customButtonUrl: null
+});
+
+function generateId(name) {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function renderList() {
+  const list = document.getElementById('projectList');
+  if (!projects.length) {
+    list.innerHTML = '<p style="color:#888; font-size:0.85rem;">No projects yet.</p>';
+    return;
+  }
+  list.innerHTML = projects.map((p, i) => `
+    <div class="cms-project-item ${i === currentEditIndex ? 'active' : ''}" onclick="selectProject(${i})">
+      <div class="item-info">
+        <span class="item-name">${p.name || 'Untitled'}</span>
+        <span class="item-status">${p.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectProject(index) {
+  currentEditIndex = index;
+  const p = projects[index];
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('formContent').style.display = 'block';
+  document.getElementById('formTitle').textContent = 'Edit Project';
+  document.getElementById('editId').value = index;
+
+  document.getElementById('fName').value = p.name;
+  document.getElementById('fStatus').value = p.status;
+  document.getElementById('fDesc').value = p.description;
+  document.getElementById('fLongDesc').value = p.longDescription || '';
+
+  const gradMatch = (p.coverGradient || '').match(/#[0-9a-fA-F]{6}/g);
+  document.getElementById('fGradStart').value = gradMatch ? gradMatch[0] : '#AF1215';
+  document.getElementById('fGradEnd').value = gradMatch ? gradMatch[1] || gradMatch[0] : '#D42E33';
+
+  document.getElementById('fCoverImage').value = p.coverImage || '';
+  document.getElementById('fEmojis').value = (p.coverEmoji || []).join(', ');
+  document.getElementById('fPlayers').value = p.players || '';
+  document.getElementById('fPlaytime').value = p.playtime || '';
+  document.getElementById('fAge').value = p.age || '';
+  document.getElementById('fPrototypeFile').value = p.prototypeFile || '';
+  document.getElementById('fYoutube').value = p.youtubeUrl || '';
+  document.getElementById('fRulebook').value = p.rulebookUrl || '';
+  document.getElementById('fShop').value = p.shopUrl || '';
+  document.getElementById('fCustomLabel').value = p.customButtonLabel || '';
+  document.getElementById('fCustomUrl').value = p.customButtonUrl || '';
+  document.getElementById('fFeatured').checked = p.featured;
+  document.getElementById('fShowOnTable').checked = p.showOnTable;
+
+  updateCoverPreview();
+  renderList();
+}
+
+function addNewProject() {
+  projects.push(defaultProject());
+  currentEditIndex = projects.length - 1;
+  selectProject(currentEditIndex);
+  document.getElementById('formTitle').textContent = 'New Project';
+  document.getElementById('fName').focus();
+}
+
+function collectFormData() {
+  const gradStart = document.getElementById('fGradStart').value.trim();
+  const gradEnd = document.getElementById('fGradEnd').value.trim();
+  const emojis = document.getElementById('fEmojis').value
+    .split(',').map(e => e.trim()).filter(Boolean);
+
+  return {
+    id: generateId(document.getElementById('fName').value.trim()),
+    name: document.getElementById('fName').value.trim(),
+    status: document.getElementById('fStatus').value,
+    coverGradient: 'linear-gradient(160deg, ' + gradStart + ', ' + gradEnd + ')',
+    coverImage: document.getElementById('fCoverImage').value.trim() || null,
+    coverEmoji: emojis,
+    description: document.getElementById('fDesc').value.trim(),
+    longDescription: document.getElementById('fLongDesc').value.trim() || '',
+    players: document.getElementById('fPlayers').value.trim() || null,
+    playtime: document.getElementById('fPlaytime').value.trim() || null,
+    age: document.getElementById('fAge').value.trim() || null,
+    featured: document.getElementById('fFeatured').checked,
+    showOnTable: document.getElementById('fShowOnTable').checked,
+    prototypeFile: document.getElementById('fPrototypeFile').value.trim() || null,
+    rulebookUrl: document.getElementById('fRulebook').value.trim() || null,
+    youtubeUrl: document.getElementById('fYoutube').value.trim() || null,
+    shopUrl: document.getElementById('fShop').value.trim() || null,
+    customButtonLabel: document.getElementById('fCustomLabel').value.trim() || null,
+    customButtonUrl: document.getElementById('fCustomUrl').value.trim() || null
+  };
+}
+
+function saveProject() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { alert('Project name is required.'); return; }
+  if (!document.getElementById('fDesc').value.trim()) { alert('Description is required.'); return; }
+
+  const data = collectFormData();
+  projects[currentEditIndex] = data;
+  renderList();
+  alert('Project saved. Click "Download JSON" to export.');
+}
+
+function deleteProject() {
+  if (!confirm('Delete this project?')) return;
+  projects.splice(currentEditIndex, 1);
+  currentEditIndex = -1;
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('formContent').style.display = 'none';
+  renderList();
+}
+
+function cancelEdit() {
+  currentEditIndex = -1;
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('formContent').style.display = 'none';
+  renderList();
+}
+
+function updateCoverPreview() {
+  const gradStart = document.getElementById('fGradStart').value.trim() || '#AF1215';
+  const gradEnd = document.getElementById('fGradEnd').value.trim() || '#D42E33';
+  const name = document.getElementById('fName').value.trim() || 'Project Name';
+  const preview = document.getElementById('coverPreview');
+  preview.style.background = 'linear-gradient(160deg, ' + gradStart + ', ' + gradEnd + ')';
+  preview.textContent = name;
+  preview.className = 'cover-preview has-preview';
+}
+
+function downloadJson() {
+  const output = JSON.stringify({ projects }, null, 2);
+  const blob = new Blob([output], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'projects.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openJsonModal() {
+  document.getElementById('jsonArea').value = JSON.stringify({ projects }, null, 2);
+  document.getElementById('jsonModal').classList.add('open');
+}
+
+function closeJsonModal() {
+  document.getElementById('jsonModal').classList.remove('open');
+}
+
+function importJson() {
+  try {
+    const data = JSON.parse(document.getElementById('jsonArea').value);
+    if (data.projects && Array.isArray(data.projects)) {
+      projects = data.projects;
+      currentEditIndex = -1;
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('formContent').style.display = 'none';
+      renderList();
+      closeJsonModal();
+      alert('Imported ' + projects.length + ' projects.');
+    } else {
+      alert('Invalid format. Expected { "projects": [...] }');
+    }
+  } catch (e) {
+    alert('Invalid JSON: ' + e.message);
+  }
+}
+
+function copyJson() {
+  navigator.clipboard.writeText(document.getElementById('jsonArea').value)
+    .then(() => alert('Copied to clipboard!'))
+    .catch(() => alert('Failed to copy.'));
+}
+
+document.querySelectorAll('#fGradStart, #fGradEnd, #fName').forEach(el => {
+  el.addEventListener('input', updateCoverPreview);
+});
+
+(async () => {
+  try {
+    const data = await fetchProjects();
+    projects = data.projects;
+    renderList();
+  } catch (e) {
+    renderList();
+  }
+})();
+</script>
+</body>
+</html>
