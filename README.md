@@ -1,2 +1,2 @@
-# rav1pasc.github.io
+# Ludical Studio
 Ludical Studio Official Website
