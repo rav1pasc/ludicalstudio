@@ -95,7 +95,7 @@
 
     return `
       <div class="project-card" data-status="${project.status}" data-id="${project.id}">
-        <div class="thumb" style="background:${project.coverGradient};">${project.name}</div>
+        <div class="thumb" style="background:${project.coverGradient};">${project.coverImage ? '<img src="' + project.coverImage + '" alt="' + project.name + '" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; border-radius:inherit;">' : ''}${!project.coverImage ? project.name : ''}</div>
         <div class="body">
           <span class="status-pill ${getStatusClass(project.status)}">${getStatusLabel(project.status)}</span>
           <h3>${project.name}</h3>

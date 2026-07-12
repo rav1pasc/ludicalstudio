@@ -59,6 +59,31 @@
     text-transform: uppercase;
     color: #888;
   }
+  .cms-project-item .item-sort {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sort-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+  }
+  .sort-btn:hover:not(:disabled) {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .sort-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
   .cms-form {
     background: white;
     border: 3px solid var(--ink);
@@ -276,7 +301,7 @@
         <button class="btn btn-primary btn-sm" style="width:100%; margin-top:12px;" onclick="addNewProject()">+ Add Project</button>
         <div class="json-actions">
           <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openJsonModal()">Import JSON</button>
-          <button class="btn btn-success btn-sm" style="flex:1;" onclick="downloadJson()">Download JSON</button>
+          <button class="btn btn-success btn-sm" style="flex:1;" onclick="downloadJson()">Download JSON + JS</button>
         </div>
       </aside>
 
@@ -484,8 +509,23 @@ function renderList() {
         <span class="item-name">${p.name || 'Untitled'}</span>
         <span class="item-status">${p.status}</span>
       </div>
+      <div class="item-sort">
+        <button class="sort-btn" onclick="event.stopPropagation(); moveProject(${i}, -1)" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button class="sort-btn" onclick="event.stopPropagation(); moveProject(${i}, 1)" ${i === projects.length - 1 ? 'disabled' : ''}>↓</button>
+      </div>
     </div>
   `).join('');
+}
+
+function moveProject(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= projects.length) return;
+  const temp = projects[index];
+  projects[index] = projects[newIndex];
+  projects[newIndex] = temp;
+  if (currentEditIndex === index) currentEditIndex = newIndex;
+  else if (currentEditIndex === newIndex) currentEditIndex = index;
+  renderList();
 }
 
 function selectProject(index) {
@@ -606,6 +646,15 @@ function downloadJson() {
   a.download = 'projects.json';
   a.click();
   URL.revokeObjectURL(url);
+
+  const jsOutput = 'var PROJECTS_DATA = ' + JSON.stringify({ projects }, null, 2) + ';';
+  const jsBlob = new Blob([jsOutput], { type: 'application/javascript' });
+  const jsUrl = URL.createObjectURL(jsBlob);
+  const b = document.createElement('a');
+  b.href = jsUrl;
+  b.download = 'projects.js';
+  b.click();
+  URL.revokeObjectURL(jsUrl);
 }
 
 function openJsonModal() {

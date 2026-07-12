@@ -20,7 +20,7 @@ prototypes/          Playable HTML prototypes
 
 ## Publish with GitHub Pages
 
-1. Create a new GitHub repo (or use an existing one), e.g. `ludical-studio`.
+1. Create a new GitHub repo (or use an existing one), e.g. `ludicalstudio`.
 2. Push all these files to the repo root (or to a `/docs` folder — your choice).
 3. In the repo, go to **Settings → Pages**.
 4. Under **Source**, choose the branch (usually `main`) and folder (`/root` or `/docs`).

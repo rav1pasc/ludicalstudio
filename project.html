@@ -183,11 +183,12 @@
   content.innerHTML = `
     <a href="projects.html" class="back-link">← Back to Projects</a>
 
-    <div class="project-hero" style="background:${project.coverGradient};">
-      <span class="status-pill ${getStatusClass(project.status)}" style="margin-bottom:16px; display:inline-block;">${getStatusLabel(project.status)}</span>
-      <h1>${project.name}</h1>
-      <p class="subtitle">${project.description}</p>
-      ${emojisHtml ? '<div class="emoji-row">' + emojisHtml + '</div>' : ''}
+    <div class="project-hero" style="background:${project.coverGradient};${project.coverImage ? ' position:relative; overflow:hidden;' : ''}">
+      ${project.coverImage ? '<img src="' + project.coverImage + '" alt="' + project.name + '" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.3;">' : ''}
+      <span class="status-pill ${getStatusClass(project.status)}" style="margin-bottom:16px; display:inline-block; position:relative;">${getStatusLabel(project.status)}</span>
+      <h1 style="position:relative;">${project.name}</h1>
+      <p class="subtitle" style="position:relative;">${project.description}</p>
+      ${emojisHtml ? '<div class="emoji-row" style="position:relative;">' + emojisHtml + '</div>' : ''}
     </div>
 
     <div class="project-detail-body">
