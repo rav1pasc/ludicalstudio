@@ -100,6 +100,8 @@ textarea.code:focus{outline:none;border-color:var(--border-bright);}
 .btn-danger{background:transparent;border:1px solid rgba(255,107,107,.4);color:var(--danger);}
 .btn-danger:hover{background:rgba(255,107,107,.08);}
 .btn-sm{padding:7px 12px;font-size:12px;}
+.btn-tiny{padding:2px 5px;font-size:11px;border:1px solid var(--border-bright);border-radius:4px;background:transparent;cursor:pointer;color:var(--text-dim);line-height:1;margin-left:4px;vertical-align:middle;}
+.btn-tiny:hover{background:rgba(255,255,255,.06);color:var(--text);}
 input[type=file]{display:none;}
 
 .file-drop{
@@ -122,6 +124,7 @@ select, .cell-input{
   padding:7px 9px;font-family:var(--ui);font-size:13px;width:100%;
 }
 select:focus,.cell-input:focus{outline:none;border-color:var(--cyan);}
+.img-status{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;font-size:13px;flex-shrink:0;}
 
 .empty-state{
   border:1px dashed var(--border);border-radius:10px;padding:40px 20px;text-align:center;color:var(--text-dim);
@@ -162,6 +165,38 @@ input[type=color]{width:44px;height:32px;padding:2px;border-radius:6px;border:1p
 .viewfinder svg{max-width:100%;max-height:520px;filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));}
 .field-label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin:16px 0 6px;}
 .field-label:first-child{margin-top:0;}
+
+/* Preview side panel */
+.preview-wrap{display:flex;gap:16px;align-items:flex-start;width:100%;}
+.preview-stage{flex:1;min-width:0;}
+.preview-side{width:340px;flex-shrink:0;}
+.side-panel{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);}
+.panel-tab{flex:1;padding:10px 12px;font-size:12.5px;font-family:var(--ui);background:transparent;border:none;color:var(--text-dim);cursor:pointer;text-align:center;transition:all .15s;}
+.panel-tab:hover{color:var(--text);background:rgba(255,255,255,.02);}
+.panel-tab.active{color:var(--cyan);border-bottom:2px solid var(--cyan);background:rgba(55,224,209,.04);}
+.panel-body{padding:12px;overflow-y:auto;max-height:580px;}
+.panel-body .empty-state{text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:12px;padding:32px 16px;}
+.field-group{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
+.field-group-header{font-family:var(--mono);font-size:12px;color:var(--cyan);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.field-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.field-row:last-child{margin-bottom:0;}
+.field-row label{font-size:12px;color:var(--text-dim);min-width:80px;flex-shrink:0;font-family:var(--mono);}
+.field-row input[type="color"]{width:36px;height:30px;padding:2px;border:1px solid var(--border);border-radius:4px;background:var(--panel-2);cursor:pointer;}
+.field-row input[type="number"]{width:80px;}
+.field-row input.cell-input,.field-row textarea.cell-input{flex:1;min-width:0;}
+.field-row textarea.cell-input{min-height:50px;}
+.clickable-el{cursor:pointer;outline:2px solid transparent;transition:outline .15s;}
+.clickable-el:hover{outline:2px solid var(--cyan);outline-offset:2px;}
+.clickable-el.selected-el{outline:2px solid var(--amber);outline-offset:2px;}
+.element-back-btn{font-size:11px;color:var(--text-dim);cursor:pointer;font-family:var(--mono);padding:4px 0 8px;display:inline-block;}
+.element-back-btn:hover{color:var(--text);}
+.filter-chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2px;padding:4px 10px;border-radius:12px;
+  background:transparent;border:1px solid var(--border-bright);color:var(--text-dim);cursor:pointer;transition:.15s;
+}
+.filter-chip:hover{color:var(--text);border-color:var(--cyan);}
+.filter-chip.active{background:rgba(55,224,209,.12);border-color:var(--cyan);color:var(--cyan);}
 
 /* Export */
 .export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:6px;}
@@ -292,15 +327,24 @@ input[type=color]{width:44px;height:32px;padding:2px;border-radius:6px;border:1p
   <!-- STEP 4: PREVIEW -->
   <section class="panel" data-step="3">
     <h2>4. Preview</h2>
-    <p class="sub">Check how each row renders before batch generating everything.</p>
-    <div class="preview-layout">
-      <div class="preview-controls">
-        <div class="field-label">Row</div>
-        <select id="previewRowSelect" onchange="renderPreview()"></select>
-        <div id="previewFieldSummary"></div>
-      </div>
+    <p class="sub">Check how each row renders before batch generating everything. Click an element on the card to jump to its fields — shift-click (or Cmd/Ctrl-click) to select several at once. Use the type filter chips in the Fields tab to quickly isolate, say, every color field.</p>
+    <div class="preview-controls" style="margin-bottom:12px;">
+      <div class="field-label" style="display:inline;margin-right:8px;">Row</div>
+      <select id="previewRowSelect" onchange="renderPreview()"></select>
+    </div>
+    <div class="preview-wrap">
       <div class="preview-stage">
         <div class="viewfinder" id="viewfinder"><div class="c3"></div><div class="c4"></div><div id="previewMount"></div></div>
+      </div>
+      <div class="preview-side">
+        <div class="side-panel" id="sidePanel">
+          <div class="panel-tabs">
+            <button class="panel-tab active" id="tabFieldsBtn" onclick="switchPreviewTab('fields')">Fields</button>
+            <button class="panel-tab" id="tabElementBtn" onclick="switchPreviewTab('element')">Element</button>
+          </div>
+          <div class="panel-body" id="panelFields"></div>
+          <div class="panel-body" id="panelElement" style="display:none;"></div>
+        </div>
       </div>
     </div>
     <div class="nav-footer">
@@ -348,6 +392,14 @@ input[type=color]{width:44px;height:32px;padding:2px;border-radius:6px;border:1p
             <input class="cell-input" type="number" id="pdfCols" value="3" min="1" max="6" style="width:70px;">
             <label>Rows</label>
             <input class="cell-input" type="number" id="pdfRows" value="3" min="1" max="6" style="width:70px;">
+          </div>
+          <div class="row" style="margin-top:0;margin-bottom:10px;">
+            <label>Page size</label>
+            <select id="pdfPageSize" style="width:130px;" title="Fit to cards grows the page exactly around the grid; A4/Letter pick portrait or landscape automatically based on your grid's shape">
+              <option value="a4" selected>A4</option>
+              <option value="letter">Letter</option>
+              <option value="fit">Fit to cards</option>
+            </select>
           </div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="pdfGuides" checked>
@@ -427,7 +479,7 @@ function buildProjectBundle(){
     version: 1,
     savedAt: new Date().toISOString(),
     templateString,
-    schema: schema.map(f=>({id:f.id, type:f.type, wrapWidth:f.wrapWidth||null, maxLines:f.maxLines||null, excluded:!!f.excluded})),
+    schema: schema.map(f=>({id:f.id, type:f.type, tag:f.tag, defaultValue:f.defaultValue, wrapWidth:f.wrapWidth||null, maxLines:f.maxLines||null, excluded:!!f.excluded, origin:f.origin||'tagged', companionOf:f.companionOf||null, kind:f.kind||null})),
     data: rows.map(r=>r.values)
   };
 }
@@ -485,7 +537,18 @@ function loadProjectBundle(payload, opts){
   const savedById = new Map((payload.schema||[]).map(f=>[f.id,f]));
   schema = result.schema.map(f=>{
     const saved = savedById.get(f.id);
-    return saved ? {...f, type:saved.type, wrapWidth:saved.wrapWidth, maxLines:saved.maxLines, excluded:saved.excluded} : f;
+    return saved ? {...f, type:saved.type, wrapWidth:saved.wrapWidth, maxLines:saved.maxLines, excluded:saved.excluded, defaultValue:saved.defaultValue !== undefined ? saved.defaultValue : f.defaultValue} : f;
+  });
+  // Restore companion/manual fields (e.g., name-fill) that aren't auto-detected from the current SVG
+  savedById.forEach((saved,id)=>{
+    if(!schema.some(f=>f.id===id)){
+      schema.push({
+        id: saved.id, tag: saved.tag||'custom', type: saved.type,
+        defaultValue: saved.defaultValue !== undefined ? saved.defaultValue : (saved.type==='color'?'#cccccc':(saved.type==='boolean'?true:'')),
+        wrapWidth: saved.wrapWidth||null, lineHeight: null, maxLines: saved.maxLines||null, excluded: !!saved.excluded,
+        origin: saved.origin||'manual', companionOf: saved.companionOf||null, kind: saved.kind||null
+      });
+    }
   });
 
   rowCounter = 0;
@@ -591,6 +654,12 @@ dz.addEventListener('drop', e=>{
 });
 
 /* ---------------- Analyze ---------------- */
+function getStyleValue(el, prop){
+  const style = el.getAttribute('style');
+  if(!style) return null;
+  const m = style.match(new RegExp(prop+'\\s*:\\s*([^;]+)'));
+  return m ? m[1].trim() : null;
+}
 function analyzeSVGString(raw){
   const doc = new DOMParser().parseFromString(raw, "image/svg+xml");
   if(doc.querySelector('parsererror')) throw new Error("Invalid SVG markup");
@@ -621,10 +690,32 @@ function analyzeSVGString(raw){
       else if(type==='boolean') defaultValue = true;
     }
     if(type==='color' && (!defaultValue || defaultValue.startsWith('url('))) defaultValue = "#cccccc";
+    // fallback: extract fill/stroke from style attribute
+    if(!defaultValue || defaultValue==='#cccccc'){
+      const styleFill = getStyleValue(el, 'fill');
+      if(styleFill && !styleFill.startsWith('url(')) defaultValue = styleFill;
+    }
     const wrapWidth = el.hasAttribute('data-wrap-width') ? parseFloat(el.getAttribute('data-wrap-width')) : null;
     const lineHeight = el.hasAttribute('data-line-height') ? parseFloat(el.getAttribute('data-line-height')) : null;
     const maxLines = el.hasAttribute('data-max-lines') ? parseInt(el.getAttribute('data-max-lines'),10) : null;
-    newSchema.push({id, tag, type, defaultValue, wrapWidth, lineHeight, maxLines});
+    newSchema.push({id, tag, type, defaultValue, wrapWidth, lineHeight, maxLines, origin:'tagged'});
+    // Auto-detect fill on text elements and stroke on shape elements
+    if(tag==='text' || tag==='tspan'){
+      const fill = el.getAttribute('fill') || getStyleValue(el, 'fill');
+      if(fill && !fill.startsWith('url(')){
+        newSchema.push({id: id+'-fill', tag, type:'color', defaultValue: fill, wrapWidth:null, lineHeight:null, maxLines:null, origin:'auto', companionOf:id, kind:'fill'});
+      }
+    }
+    if(['rect','circle','ellipse','path','polygon','line'].includes(tag)){
+      const stroke = el.getAttribute('stroke') || getStyleValue(el, 'stroke');
+      if(stroke && stroke!=='none' && !stroke.startsWith('url(')){
+        newSchema.push({id: id+'-stroke', tag, type:'color', defaultValue: stroke, wrapWidth:null, lineHeight:null, maxLines:null, origin:'auto', companionOf:id, kind:'stroke'});
+      }
+      const sw = el.getAttribute('stroke-width') || getStyleValue(el, 'stroke-width');
+      if(sw && parseFloat(sw)>0){
+        newSchema.push({id: id+'-stroke-width', tag, type:'number', defaultValue: parseFloat(sw), wrapWidth:null, lineHeight:null, maxLines:null, origin:'auto', companionOf:id, kind:'stroke-width'});
+      }
+    }
   });
   return {doc, schema: newSchema};
 }
@@ -652,11 +743,15 @@ function runAnalyze(){
 
   const isReanalyze = schema.length > 0;
   const oldById = new Map(schema.map(f=>[f.id, f]));
+  const detectedIds = new Set(result.schema.map(f=>f.id));
   const mergedSchema = result.schema.map(f=>{
     const old = oldById.get(f.id);
     // keep prior customizations (type override, wrap settings, excluded) for fields that still exist
     return old ? {...f, type: old.type, wrapWidth: old.wrapWidth, maxLines: old.maxLines, excluded: old.excluded} : f;
   });
+  // manually-added fields (e.g. via "+ Add field") have no id in the SVG itself, so they'd
+  // otherwise disappear on re-analyze — carry them forward as-is
+  schema.forEach(f=>{ if(f.origin==='manual' && !detectedIds.has(f.id)) mergedSchema.push(f); });
 
   templateString = raw;
   templateDoc = result.doc;
@@ -682,6 +777,11 @@ function runAnalyze(){
 
 /* ---------------- Schema table ---------------- */
 const TYPE_OPTIONS = ['text','number','color','image','boolean'];
+function originBadge(f){
+  if(f.origin==='auto') return `<span class="badge" title="Detected automatically from ${f.companionOf}'s fill/stroke — not something you tagged yourself">auto</span>`;
+  if(f.origin==='manual') return `<span class="badge" style="background:rgba(55,224,209,.12);color:var(--cyan);" title="Added manually via 'Add field' or the 🎨 button">added</span>`;
+  return '';
+}
 function renderSchemaTable(){
   const wrap = document.getElementById('schemaTableWrap');
   if(schema.length===0){ wrap.innerHTML = `<div class="empty-state">No schema yet — analyze a template first.</div>`; return; }
@@ -691,7 +791,7 @@ function renderSchemaTable(){
     <tbody>
     ${schema.map((f,i)=>`
       <tr${f.excluded?' style="opacity:.55;"':''}>
-        <td><span class="id-pill">${f.id}</span></td>
+        <td><span class="id-pill">${f.id}</span> ${originBadge(f)}${(['text','tspan'].includes(f.tag) && !schema.some(s=>s.id===f.id+'-fill')) ? `<button class="btn-tiny" onclick="addTextColorField(${i})" title="Add color field for this text">🎨</button>` : ''}</td>
         <td style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">&lt;${f.tag}&gt;</td>
         <td>
           <select onchange="changeFieldType(${i}, this.value)" ${f.excluded?'disabled':''}>
@@ -721,7 +821,11 @@ function renderSchemaTable(){
       </tr>`).join('')}
     </tbody>
   </table></div>
-  <div class="help-note" style="margin-top:16px;">Line length sets how wide text can run before it wraps to a new line — this rewrites the field as multiple <code>&lt;tspan&gt;</code> lines at export time, no need to edit the SVG by hand. Leave it blank for fields that should always stay on one line (like a title).</div>`;
+  <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+    <button class="btn" onclick="addSchemaField()" style="font-size:13px;">+ Add field</button>
+    <span style="font-size:12px;color:var(--text-dim);">Manually add a field that wasn't auto-detected (e.g., a text color field like <code>title-fill</code> with type <code>color</code>).</span>
+  </div>
+  <div class="help-note" style="margin-top:16px;">Line length sets how wide text can run before it wraps to a new line — this rewrites the field as multiple <code>&lt;tspan&gt;</code> lines at export time, no need to edit the SVG by hand. Leave it blank for fields that should always stay on one line (like a title).<br><br>Fields marked <span class="badge">auto</span> weren't explicitly tagged — the Studio noticed a fill/stroke on an id'd element and split it into its own field automatically. Exclude them in the "In editor" column if you'd rather they stay fixed.</div>`;
 }
 function setFieldWrap(i, key, rawVal){
   const n = rawVal==='' ? null : Math.max(0, parseInt(rawVal,10)||0);
@@ -750,6 +854,36 @@ function changeFieldType(i, val){
   if(val==='boolean') schema[i].defaultValue = true;
   renderSchemaTable();
   scheduleAutosave();
+}
+function addTextColorField(i){
+  const f = schema[i];
+  const fillId = f.id+'-fill';
+  if(schema.some(s=>s.id===fillId)){ toast('Color field already exists.'); return; }
+  schema.push({id: fillId, tag: f.tag, type: 'color', defaultValue: '#cccccc', wrapWidth: null, lineHeight: null, maxLines: null, origin:'manual', companionOf:f.id, kind:'fill'});
+  rows.forEach(r => r.values[fillId] = '#cccccc');
+  renderSchemaTable();
+  if(currentStep===2) renderDataTable();
+  if(currentStep===3) renderPreview();
+  scheduleAutosave();
+  toast(`Added color field "${fillId}"`);
+}
+function addSchemaField(){
+  const id = prompt('Field id (e.g., title-fill):');
+  if(!id || !id.trim()) return;
+  const cleanId = id.trim();
+  if(schema.some(f=>f.id===cleanId)){ toast('A field with that id already exists.'); return; }
+  const type = prompt('Type (text, number, color, image, boolean):', 'color');
+  const validTypes = ['text','number','color','image','boolean'];
+  const cleanType = validTypes.includes(type?.trim()) ? type.trim() : 'color';
+  const defaultVal = cleanType==='color' ? '#cccccc' : (cleanType==='boolean' ? true : '');
+  schema.push({id: cleanId, tag: 'custom', type: cleanType, defaultValue: defaultVal, wrapWidth: null, lineHeight: null, maxLines: null, origin:'manual'});
+  // populate default value in every row
+  rows.forEach(r => r.values[cleanId] = defaultVal);
+  renderSchemaTable();
+  if(currentStep===2) renderDataTable();
+  if(currentStep===3) renderPreview();
+  scheduleAutosave();
+  toast(`Added field "${cleanId}" (${cleanType})`);
 }
 
 /* ---------------- Data rows ---------------- */
@@ -837,7 +971,7 @@ function renderDataTable(){
       const val = r.values[f.id];
       const cellId = `cell_${r._rid}_${f.id}`;
       if(f.type==='color'){
-        return `<td><input type="color" value="${val||'#cccccc'}" oninput="setCell(${r._rid},'${f.id}',this.value)"></td>`;
+        return `<td><input type="color" value="${val||'#cccccc'}" onchange="setCell(${r._rid},'${f.id}',this.value)"></td>`;
       }
       if(f.type==='boolean'){
         return `<td><input type="checkbox" ${val?'checked':''} onchange="setCell(${r._rid},'${f.id}',this.checked)"></td>`;
@@ -878,6 +1012,30 @@ function escapeAttr(s){ return String(s??'').replace(/"/g,'&quot;'); }
 function setCell(rid, fieldId, value){
   const r = rows.find(r=>r._rid===rid); if(!r) return;
   r.values[fieldId] = value;
+  if(currentStep===3){
+    const mount = document.getElementById('previewMount');
+    const f = schema.find(s=>s.id===fieldId);
+    if(f && mount){
+      const applySVG = (el, f, val)=>{
+        if(f.id.endsWith('-fill') && f.type==='color') el.style.fill = val || '#cccccc';
+        else if(f.id.endsWith('-stroke') && f.type==='color') el.style.stroke = val || '#cccccc';
+        else if(f.id.endsWith('-stroke-width') && f.type==='number') el.style.strokeWidth = val ?? '1';
+        else if(f.type==='text' || f.type==='number') el.textContent = val ?? '';
+        else if(f.type==='color') el.style.fill = val || '#cccccc';
+        else if(f.type==='image' && val){ el.setAttribute('href', val); el.setAttributeNS('http://www.w3.org/1999/xlink','href', val); }
+        else if(f.type==='boolean') el.style.display = val ? '' : 'none';
+      };
+      if(f.id.endsWith('-fill') || f.id.endsWith('-stroke') || f.id.endsWith('-stroke-width')){
+        const baseId = f.id.endsWith('-fill') ? f.id.slice(0,-5) : f.id.endsWith('-stroke-width') ? f.id.slice(0,-13) : f.id.slice(0,-7);
+        const el = mount.querySelector(`#${CSS.escape(baseId)}`);
+        if(el) applySVG(el, f, value);
+      } else {
+        const el = mount.querySelector(`#${CSS.escape(f.id)}`);
+        if(el) applySVG(el, f, value);
+      }
+    }
+    if(f && f.type==='image') validatePreviewImageUrl(value, fieldId);
+  }
   scheduleAutosave();
 }
 function setCellImage(evt, rid, fieldId){
@@ -1010,15 +1168,30 @@ function applyWrappedText(el, text, f){
 function renderCardSVGString(rowValues){
   const clone = templateDoc.documentElement.cloneNode(true);
   schema.forEach(f=>{
+    const val = rowValues[f.id];
+    if(f.id.endsWith('-fill') && f.type==='color'){
+      const baseEl = clone.querySelector(`#${CSS.escape(f.id.slice(0,-5))}`);
+      if(baseEl) baseEl.style.fill = val || '#cccccc';
+      return;
+    }
+    if(f.id.endsWith('-stroke') && f.type==='color'){
+      const baseEl = clone.querySelector(`#${CSS.escape(f.id.slice(0,-7))}`);
+      if(baseEl) baseEl.style.stroke = val || '#cccccc';
+      return;
+    }
+    if(f.id.endsWith('-stroke-width') && f.type==='number'){
+      const baseEl = clone.querySelector(`#${CSS.escape(f.id.slice(0,-13))}`);
+      if(baseEl) baseEl.style.strokeWidth = val ?? '1';
+      return;
+    }
     const el = clone.querySelector(`#${CSS.escape(f.id)}`);
     if(!el) return;
-    const val = rowValues[f.id];
     if(f.type==='text' && f.wrapWidth){
       applyWrappedText(el, val ?? '', f);
     } else if(f.type==='text' || f.type==='number'){
       el.textContent = val ?? '';
     } else if(f.type==='color'){
-      el.setAttribute('fill', val || '#cccccc');
+      el.style.fill = val || '#cccccc';
     } else if(f.type==='image'){
       if(val){
         el.setAttribute('href', val);
@@ -1031,22 +1204,190 @@ function renderCardSVGString(rowValues){
   return new XMLSerializer().serializeToString(clone);
 }
 
+/* ---------------- Preview side panel helpers ---------------- */
+function getBaseId(id){
+  if(id.endsWith('-fill')) return id.slice(0,-5);
+  if(id.endsWith('-stroke-width')) return id.slice(0,-13);
+  if(id.endsWith('-stroke')) return id.slice(0,-7);
+  return id;
+}
+function getGroupedFields(){
+  const groups = {};
+  const editable = schema.filter(f=>!f.excluded);
+  editable.forEach(f=>{
+    const base = getBaseId(f.id);
+    if(!groups[base]) groups[base] = [];
+    groups[base].push(f);
+  });
+  return groups;
+}
 /* ---------------- Preview ---------------- */
+let _selectedElements = new Set();
+let _fieldTypeFilter = 'all';
+const FILTER_TYPES = ['all','text','number','color','image','boolean'];
 function renderPreviewControls(){
   const sel = document.getElementById('previewRowSelect');
   sel.innerHTML = rows.map((r,i)=>`<option value="${r._rid}">Row ${i+1}</option>`).join('') || `<option>No rows</option>`;
   renderPreview();
 }
+function switchPreviewTab(name){
+  document.getElementById('tabFieldsBtn').classList.toggle('active', name==='fields');
+  document.getElementById('tabElementBtn').classList.toggle('active', name==='element');
+  document.getElementById('panelFields').style.display = name==='fields' ? '' : 'none';
+  document.getElementById('panelElement').style.display = name==='element' ? '' : 'none';
+}
+function renderPanelInput(row, f, rid){
+  const val = row.values[f.id];
+  const prefix = `setCell(${rid},'${f.id}',`;
+  if(f.type==='color') return `<input type="color" value="${val||'#cccccc'}" onchange="${prefix}this.value)">`;
+  if(f.type==='boolean') return `<input type="checkbox" ${val?'checked':''} onchange="${prefix}this.checked)">`;
+  if(f.type==='image'){
+    const warn = !val ? `<span style="color:var(--text-dim);font-size:11px;margin-left:4px;">no image</span>` : '';
+    return `${warn}<input class="cell-input" placeholder="paste URL" value="${(val||'').startsWith('data:')?'':(val||'')}" oninput="${prefix}this.value)"><span class="img-status" data-field="${f.id}" style="display:inline-block;width:18px;text-align:center;font-size:12px;flex-shrink:0;"></span>`;
+  }
+  if(f.type==='number') return `<input class="cell-input" type="number" style="width:90px" value="${val}" oninput="${prefix}this.value)">`;
+  if(f.type==='text' && f.wrapWidth) return `<textarea class="cell-input" rows="2" oninput="${prefix}this.value)">${escapeHtml(val)}</textarea>`;
+  return `<input class="cell-input" type="text" value="${escapeAttr(val)}" oninput="${prefix}this.value)">`;
+}
+async function validatePreviewImageUrl(url, fieldId){
+  const span = document.querySelector(`.img-status[data-field="${fieldId}"]`);
+  if(!span) return;
+  if(!url || url.startsWith('data:') || url.startsWith('blob:')){ span.textContent='✓'; span.style.color='var(--green)'; return; }
+  span.textContent='⋯'; span.style.color='var(--text-dim)';
+  try{
+    const resp = await fetch(url, {mode:'cors', credentials:'omit'});
+    if(resp.ok){
+      span.textContent='✓'; span.style.color='var(--green)';
+    } else {
+      span.textContent='✗'; span.style.color='var(--red)';
+    }
+  }catch(e){
+    // CORS or network failure – preview may still show it but export won't
+    span.textContent='⚠'; span.style.color='var(--orange)';
+    span.title='Image loads in preview but CORS blocks canvas export. Host on a CORS-enabled server or use a data URL.';
+  }
+}
+function validatePreviewImages(row){
+  const imageFields = schema.filter(f=>f.type==='image');
+  imageFields.forEach(f=> validatePreviewImageUrl(row.values[f.id], f.id) );
+}
+function fieldTypeChips(){
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${FILTER_TYPES.map(t=>
+    `<button class="filter-chip${_fieldTypeFilter===t?' active':''}" onclick="setFieldTypeFilter('${t}')">${t==='all'?'All':t[0].toUpperCase()+t.slice(1)}</button>`
+  ).join('')}</div>`;
+}
+function setFieldTypeFilter(t){
+  _fieldTypeFilter = t;
+  const rid = +document.getElementById('previewRowSelect').value;
+  const row = rows.find(r=>r._rid===rid) || rows[0];
+  if(row) document.getElementById('panelFields').innerHTML = renderFieldsPanel(row, row._rid);
+}
+function renderFieldsPanel(row, rid){
+  const groups = getGroupedFields();
+  const ids = Object.keys(groups).sort();
+  let html = fieldTypeChips();
+  if(ids.length===0) return html + '<div class="empty-state">No editable fields</div>';
+  let anyShown = false;
+  ids.forEach(base=>{
+    const fields = groups[base].filter(f => _fieldTypeFilter==='all' || f.type===_fieldTypeFilter);
+    if(fields.length===0) return;
+    anyShown = true;
+    html += `<div class="field-group"><div class="field-group-header">${base}</div>`;
+    fields.forEach(f=>{
+      html += `<div class="field-row"><label>${f.id===base ? (f.type==='text'?'Text':f.type==='color'?'Fill':f.type==='image'?'Image':f.type==='number'?'Value':'') : f.id.slice(base.length+1)}</label>${renderPanelInput(row, f, rid)}</div>`;
+    });
+    html += '</div>';
+  });
+  if(!anyShown) html += `<div class="empty-state">No ${_fieldTypeFilter==='all'?'':_fieldTypeFilter+' '}fields${_fieldTypeFilter==='all'?'':' on this card'}</div>`;
+  return html;
+}
+function renderElementPanel(row, rid){
+  if(_selectedElements.size===0) return '<div class="empty-state">Click an element in the preview to edit its fields.<br><br>Shift-click (or Cmd/Ctrl-click) to select several elements at once.</div>';
+  const groups = getGroupedFields();
+  const multi = _selectedElements.size>1;
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <a class="element-back-btn" style="padding:0;" onclick="clearElementSelection()">← All fields</a>
+    ${multi?`<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">${_selectedElements.size} selected</span>`:''}
+  </div>`;
+  let anyShown = false;
+  Array.from(_selectedElements).forEach(elementId=>{
+    const fields = groups[elementId];
+    if(!fields || fields.length===0) return;
+    anyShown = true;
+    html += `<div class="field-group"><div class="field-group-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>${elementId}</span>${multi?`<button class="btn-tiny" title="Remove from selection" onclick="removeFromSelection('${elementId}')">✕</button>`:''}
+    </div>`;
+    fields.forEach(f=>{
+      const label = f.id===elementId ? (f.type==='text'?'Text':f.type==='color'?'Fill':f.type==='image'?'Image':f.type==='number'?'Value':'') : f.id.slice(elementId.length+1);
+      html += `<div class="field-row"><label>${label}</label>${renderPanelInput(row, f, rid)}</div>`;
+    });
+    html += '</div>';
+  });
+  if(!anyShown) html += '<div class="empty-state">No editable fields for the selected element(s)</div>';
+  return html;
+}
+function clearElementSelection(){
+  _selectedElements = new Set();
+  document.querySelectorAll('#previewMount .selected-el').forEach(n=>n.classList.remove('selected-el'));
+  document.getElementById('panelElement').innerHTML = renderElementPanel(null, null);
+  switchPreviewTab('fields');
+}
+function removeFromSelection(id){
+  _selectedElements.delete(id);
+  const mount = document.getElementById('previewMount');
+  const n = mount.querySelector(`#${CSS.escape(id)}`);
+  if(n) n.classList.remove('selected-el');
+  const rid = +document.getElementById('previewRowSelect').value;
+  const row = rows.find(r=>r._rid===rid) || rows[0];
+  if(_selectedElements.size===0){ clearElementSelection(); return; }
+  document.getElementById('panelElement').innerHTML = renderElementPanel(row, rid);
+}
+function highlightSelectedElements(mount){
+  mount.querySelectorAll('.clickable-el').forEach(n=>n.classList.remove('selected-el'));
+  _selectedElements.forEach(id=>{ const n = mount.querySelector(`#${CSS.escape(id)}`); if(n) n.classList.add('selected-el'); });
+}
+function addPreviewClickHandlers(mount, row, rid){
+  const groups = getGroupedFields();
+  Object.keys(groups).forEach(base=>{
+    const el = mount.querySelector(`#${CSS.escape(base)}`);
+    if(!el) return;
+    el.classList.add('clickable-el');
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(e.shiftKey || e.metaKey || e.ctrlKey){
+        if(_selectedElements.has(base)) _selectedElements.delete(base);
+        else _selectedElements.add(base);
+      } else {
+        _selectedElements = new Set([base]);
+      }
+      highlightSelectedElements(mount);
+      document.getElementById('panelElement').innerHTML = renderElementPanel(row, rid);
+      switchPreviewTab('element');
+    });
+  });
+  highlightSelectedElements(mount);
+}
 function renderPreview(){
   const mount = document.getElementById('previewMount');
-  const summary = document.getElementById('previewFieldSummary');
-  if(rows.length===0 || !templateDoc){ mount.innerHTML = `<div style="color:var(--text-dim);font-family:var(--mono);font-size:12.5px;">No data to preview</div>`; summary.innerHTML=''; return; }
+  if(rows.length===0 || !templateDoc){ mount.innerHTML = `<div style="color:var(--text-dim);font-family:var(--mono);font-size:12.5px;">No data to preview</div>`; return; }
   const sel = document.getElementById('previewRowSelect');
   const rid = +sel.value || rows[0]._rid;
   const row = rows.find(r=>r._rid===rid) || rows[0];
   const svgStr = renderCardSVGString(row.values);
   mount.innerHTML = svgStr;
-  summary.innerHTML = schema.map(f=>`<div class="field-label">${f.id}</div><div style="font-size:13px;color:var(--text);word-break:break-all;">${String(row.values[f.id]).slice(0,60)||'—'}</div>`).join('');
+  // Render side panel
+  document.getElementById('panelFields').innerHTML = renderFieldsPanel(row, rid);
+  const groups = getGroupedFields();
+  _selectedElements = new Set(Array.from(_selectedElements).filter(id=>groups[id])); // drop stale selections
+  if(_selectedElements.size>0){
+    document.getElementById('panelElement').innerHTML = renderElementPanel(row, rid);
+    switchPreviewTab('element');
+  } else {
+    document.getElementById('panelElement').innerHTML = renderElementPanel(row, rid);
+    switchPreviewTab('fields');
+  }
+  addPreviewClickHandlers(mount, row, rid);
+  validatePreviewImages(row);
 }
 
 /* ---------------- Export helpers ---------------- */
@@ -1093,6 +1434,37 @@ function downloadBlob(blob, filename){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url), 4000);
 }
+async function resolveSVGImages(svgStr){
+  const doc = new DOMParser().parseFromString(svgStr, 'image/svg+xml');
+  const images = doc.querySelectorAll('image');
+  let changed = false;
+  for(const img of images){
+    let href = img.getAttribute('href') || img.getAttributeNS('http://www.w3.org/1999/xlink','href');
+    if(!href || href.startsWith('data:') || href.startsWith('blob:')) continue;
+    href = href.trim();
+    if(!href) continue;
+    try{
+      const resp = await fetch(href, {mode:'cors', credentials:'omit'});
+      if(!resp.ok){
+        console.warn('resolveSVGImages: HTTP', resp.status, 'for', href.slice(0,80));
+        continue;
+      }
+      const blob = await resp.blob();
+      const dataUrl = await new Promise((resolve, reject)=>{
+        const r = new FileReader();
+        r.onload = ()=>resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+      img.setAttribute('href', dataUrl);
+      img.setAttributeNS('http://www.w3.org/1999/xlink','href', dataUrl);
+      changed = true;
+    }catch(e){
+      console.warn('resolveSVGImages: fetch failed for', href.slice(0,80), '-', e.message);
+    }
+  }
+  return changed ? new XMLSerializer().serializeToString(doc) : svgStr;
+}
 function svgStringToPNGBlob(svgStr, w, h, scale){
   return new Promise((resolve, reject)=>{
     const blob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
@@ -1118,32 +1490,30 @@ function updateExportSummary(){
 
 async function exportSVGs(){
   if(!guardExport()) return;
-  _exportCanceled = false;
-  showCancelExportBtn();
+  beginExport();
   const zip = new JSZip();
   for(let i=0;i<rows.length;i++){
-    if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+    if(_exportCanceled){ toast('Export cancelled'); endExport(); return; }
     showProgress(Math.round((i/rows.length)*100), `Adding card ${i+1} of ${rows.length}…`);
     zip.file(rowFilename(rows[i],i,'svg'), renderCardSVGString(rows[i].values));
   }
   showProgress(100,'Zipping SVGs…');
   const blob = await zip.generateAsync({type:'blob'});
   downloadBlob(blob, 'cards-svg.zip');
-  hideProgress(); hideCancelExportBtn();
+  endExport();
   toast('SVGs downloaded');
 }
 
 async function exportPNGs(){
   if(!guardExport()) return;
-  _exportCanceled = false;
-  showCancelExportBtn();
+  beginExport();
   const {w,h} = getTemplateDims();
   const scale = +document.getElementById('pngScale').value;
   const zip = new JSZip();
   for(let i=0;i<rows.length;i++){
-    if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+    if(_exportCanceled){ toast('Export cancelled'); endExport(); return; }
     showProgress(Math.round((i/rows.length)*100), `Rendering card ${i+1} of ${rows.length}…`);
-    const svgStr = renderCardSVGString(rows[i].values);
+    const svgStr = await resolveSVGImages(renderCardSVGString(rows[i].values));
     try{
       const pngBlob = await svgStringToPNGBlob(svgStr, w, h, scale);
       zip.file(rowFilename(rows[i],i,'png'), pngBlob);
@@ -1152,45 +1522,59 @@ async function exportPNGs(){
   showProgress(100,'Zipping PNGs…');
   const blob = await zip.generateAsync({type:'blob'});
   downloadBlob(blob, 'cards-png.zip');
-  hideProgress(); hideCancelExportBtn();
+  endExport();
   toast('PNGs downloaded');
 }
 
 async function exportPDF(){
   if(!guardExport()) return;
-  _exportCanceled = false;
-  showCancelExportBtn();
+  beginExport();
   const {w,h} = getTemplateDims();
   const cols = Math.max(1, parseInt(document.getElementById('pdfCols').value)||3);
   const rowsPerPage = Math.max(1, parseInt(document.getElementById('pdfRows').value)||3);
   const showGuides = document.getElementById('pdfGuides').checked;
+  const pageSizeChoice = document.getElementById('pdfPageSize').value; // 'a4' | 'letter' | 'fit'
   const cardsPerPage = cols * rowsPerPage;
   const scale = 1.5;
   const { jsPDF } = window.jspdf;
   const margin = 36;
   const gutter = showGuides ? 0 : 8;
-  const availW = (cols > 1) ? ((595.28 - margin*2 - gutter*(cols-1)) / cols) : (595.28 - margin*2);
-  const availH = (rowsPerPage > 1) ? ((841.89 - margin*2 - gutter*(rowsPerPage-1)) / rowsPerPage) : (841.89 - margin*2);
-  let cardW = Math.min(availW, w * (availH / h));
-  let cardH = cardW * (h / w);
-  if(cardW > availW || cardH > availH){
-    const scale2 = Math.min(availW/w, availH/h);
-    cardW = w * scale2;
-    cardH = h * scale2;
+
+  let pageW, pageH, orientation, cardW, cardH;
+  if(pageSizeChoice==='fit'){
+    // page grows exactly around the grid at the card's native size — nothing gets shrunk
+    cardW = w; cardH = h;
+    pageW = margin*2 + cols*cardW + (cols-1)*gutter;
+    pageH = margin*2 + rowsPerPage*cardH + (rowsPerPage-1)*gutter;
+    orientation = pageW > pageH ? 'l' : 'p';
+  } else {
+    const sizes = { a4:[595.28,841.89], letter:[612,792] };
+    const base = sizes[pageSizeChoice] || sizes.a4;
+    const small = Math.min(base[0], base[1]), large = Math.max(base[0], base[1]);
+    const gridWide = (cols*w) >= (rowsPerPage*h);
+    if(gridWide){ orientation='l'; pageW=large; pageH=small; }
+    else { orientation='p'; pageW=small; pageH=large; }
+    const availW = (cols > 1) ? ((pageW - margin*2 - gutter*(cols-1)) / cols) : (pageW - margin*2);
+    const availH = (rowsPerPage > 1) ? ((pageH - margin*2 - gutter*(rowsPerPage-1)) / rowsPerPage) : (pageH - margin*2);
+    cardW = Math.min(availW, w * (availH / h));
+    cardH = cardW * (h / w);
   }
+  if(cardW<=0 || cardH<=0){ toast('Margin/grid size too large for the chosen page — try fewer columns/rows or "Fit to cards"'); endExport(); return; }
+
   const totalCards = rows.length;
   const totalPages = Math.ceil(totalCards / cardsPerPage);
-  const pdf = new jsPDF({orientation:'p', unit:'pt', format:'a4'});
+  const pdf = new jsPDF({orientation, unit:'pt', format:[pageW,pageH]});
   let cardIdx = 0;
   for(let page=0; page<totalPages; page++){
-    if(page>0) pdf.addPage();
+    if(page>0) pdf.addPage([pageW,pageH], orientation);
     for(let r=0; r<rowsPerPage && cardIdx<totalCards; r++){
       for(let c=0; c<cols && cardIdx<totalCards; c++){
-        if(_exportCanceled){ hideProgress(); hideCancelExportBtn(); toast('Export cancelled'); return; }
+        if(_exportCanceled){ toast('Export cancelled'); endExport(); return; }
         const x = margin + c * (cardW + gutter);
         const y = margin + r * (cardH + gutter);
         showProgress(Math.round((cardIdx/totalCards)*100), `Rendering card ${cardIdx+1} of ${totalCards}…`);
-        const svgStr = renderCardSVGString(rows[cardIdx].values);
+        let svgStr = renderCardSVGString(rows[cardIdx].values);
+        svgStr = await resolveSVGImages(svgStr);
         try{
           const pngBlob = await svgStringToPNGBlob(svgStr, w, h, scale);
           const dataUrl = await blobToDataURL(pngBlob);
@@ -1216,7 +1600,7 @@ async function exportPDF(){
   }
   showProgress(100,'Saving PDF…');
   pdf.save('cards.pdf');
-  hideProgress(); hideCancelExportBtn();
+  endExport();
   toast('PDF downloaded');
 }
 function blobToDataURL(blob){
@@ -1228,16 +1612,29 @@ function blobToDataURL(blob){
   });
 }
 function guardExport(){
+  if(isExporting){ toast('An export is already running — cancel it first, or wait for it to finish'); return false; }
   if(!templateDoc || schema.length===0){ toast('Analyze a template first'); return false; }
   if(rows.length===0){ toast('Add at least one data row first'); return false; }
   return true;
+}
+let isExporting = false;
+function beginExport(){
+  isExporting = true;
+  _exportCanceled = false;
+  document.querySelectorAll('.export-card .btn-primary').forEach(b=>b.disabled=true);
+  showCancelExportBtn();
+}
+function endExport(){
+  isExporting = false;
+  document.querySelectorAll('.export-card .btn-primary').forEach(b=>b.disabled=false);
+  hideProgress();
+  hideCancelExportBtn();
 }
 function showCancelExportBtn(){ document.getElementById('cancelExportBtn').style.display='inline-block'; }
 function hideCancelExportBtn(){ document.getElementById('cancelExportBtn').style.display='none'; }
 let _exportCanceled = false;
 function cancelExport(){
   _exportCanceled = true;
-  hideCancelExportBtn();
   toast('Cancelling…');
 }
 </script>
