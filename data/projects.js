@@ -7,8 +7,8 @@ var PROJECTS_DATA = {
       "coverGradient": "linear-gradient(160deg, #2a1c12, #4a3018)",
       "coverImage": "images/Gem&Jewels.png",
       "coverEmoji": [],
-      "description": "A solo puzzle boardgame game where you place colored gem tiles on a 4x4 board to score points. (Coming to TIBM 2026: 12-13 DEC 2026)",
-      "longDescription": "Place tiles from your hand onto the board to create matches. Match shapes to clear adjacent tiles and score points. Chain reactions occur when border colors match, creating cascading combos. Features 5 gem types — circle, square, triangle, diamond, and star — each with unique colors. How high can you score before the board fills up?",
+      "description": "A puzzle boardgame game where you place colored gem tiles on a 4x4 board to score points. (Coming to TIBM 2026: 12-13 DEC 2026)",
+      "longDescription": "- Place tiles from your hand onto the board to create matches. \n- Match/Swap shapes to clear adjacent tiles and score points. \n- Chain reactions occur when border colors match, creating cascading combos.\n\nHow high can you score before the board fills up?",
       "players": "1-4 (1 for web version)",
       "playtime": "15-30 Mins",
       "age": "4+",
@@ -30,7 +30,8 @@ var PROJECTS_DATA = {
           "url": "Document/Rulebook_JG.pdf",
           "featured": false
         }
-      ]
+      ],
+      "gallery": []
     },
     {
       "id": "svg-template-studio",
@@ -56,7 +57,8 @@ var PROJECTS_DATA = {
           "url": "prototypes/svg-template-studio.html",
           "featured": true
         }
-      ]
+      ],
+      "gallery": []
     }
   ]
 };

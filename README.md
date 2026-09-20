@@ -64,9 +64,14 @@ Each project in `data/projects.js` / `data/projects.json` supports:
   buttons: [              // action buttons on the project detail page
     { label: 'Try it', url: 'prototypes/gems-jewels.html', featured: true },
     { label: 'View Rulebook', url: 'Document/Rulebook_JG.pdf', featured: false }
+  ],
+  gallery: [              // optional slideshow images
+    { url: 'images/gallery/setup.png', caption: 'Board setup' },
+    { url: 'images/gallery/prototype.jpg', caption: 'Early prototype' }
   ]
 }
 ```
 
 - The detail page renders `buttons` in order — first = primary style, rest = outline.
 - The project **card** (grid pages) shows only the button flagged `featured: true` (falls back to the first button).
+- The **slideshow** on the detail page always starts with `coverImage` (if set), then `gallery` images. Empty `gallery` falls back to just the cover. Clicking a slide enlarges it in a lightbox (✕ / click outside / Esc to close).

@@ -86,6 +86,108 @@
     margin-bottom: 20px;
   }
   .back-link:hover { text-decoration: underline; }
+  .project-gallery {
+    max-width: 720px;
+    margin: 0 auto 32px;
+    padding: 0 24px;
+  }
+  .gallery-frame {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #111;
+    cursor: zoom-in;
+  }
+  .gallery-frame .gallery-slide {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    display: block;
+    background: #111;
+  }
+  .gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s ease;
+  }
+  .gallery-arrow:hover { background: rgba(0,0,0,0.75); }
+  .gallery-arrow.prev { left: 10px; }
+  .gallery-arrow.next { right: 10px; }
+  .gallery-arrow.hidden { display: none; }
+  .gallery-caption {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #666;
+    margin: 12px 0 4px;
+  }
+  .gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .gallery-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+  }
+  .gallery-dot.active { background: var(--red); }
+  .gallery-dots.hidden { display: none; }
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 90%;
+    max-height: 80vh;
+    border-radius: 8px;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+  .lightbox-caption {
+    color: #fff;
+    margin-top: 14px;
+    font-size: 0.95rem;
+  }
 </style>
 </head>
 <body>
@@ -133,8 +235,14 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=3"></script>
-<script src="js/script.js?v=3"></script>
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose" aria-label="Close">✕</button>
+  <img id="lbImg" alt="">
+  <div class="lightbox-caption" id="lbCaption"></div>
+</div>
+
+<script src="data/projects.js?v=4"></script>
+<script src="js/script.js?v=4"></script>
 <script>
 (async () => {
   const params = new URLSearchParams(window.location.search);
@@ -171,6 +279,12 @@
     .map((b, i) => '<a href="' + b.url + '" target="_blank" rel="noopener" class="btn ' + (i === 0 ? 'btn-primary' : 'btn-outline') + '">' + b.label + '</a>')
     .join('');
 
+  const slides = [];
+  if (project.coverImage) slides.push({ url: project.coverImage, caption: null });
+  (project.gallery || []).forEach(g => {
+    if (g && g.url) slides.push({ url: g.url, caption: g.caption || null });
+  });
+
   content.innerHTML = `
     <a href="projects.html" class="back-link">← Back to Projects</a>
 
@@ -182,6 +296,17 @@
       ${emojisHtml ? '<div class="emoji-row" style="position:relative;">' + emojisHtml + '</div>' : ''}
     </div>
 
+    ${slides.length ? `
+    <div class="project-gallery" id="projectGallery">
+      <div class="gallery-frame">
+        <img class="gallery-slide" alt="${project.name}">
+        <button class="gallery-arrow prev" aria-label="Previous slide">◀</button>
+        <button class="gallery-arrow next" aria-label="Next slide">▶</button>
+      </div>
+      <div class="gallery-caption" id="galCaption"></div>
+      <div class="gallery-dots" id="galDots"></div>
+    </div>` : ''}
+
     <div class="project-detail-body">
       ${metaParts.length ? '<div class="project-meta">' + metaParts.join('') + '</div>' : ''}
 
@@ -192,7 +317,73 @@
       ${actionsHtml ? '<div class="project-actions">' + actionsHtml + '</div>' : ''}
     </div>
   `;
+
+  if (slides.length) initGallery(slides, project.name);
 })();
+
+const lightbox = document.getElementById('lightbox');
+const lbImg = document.getElementById('lbImg');
+const lbCaption = document.getElementById('lbCaption');
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+}
+
+document.getElementById('lbClose').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+function initGallery(slides, projectName) {
+  const frame = document.querySelector('.gallery-frame');
+  const img = document.querySelector('.gallery-slide');
+  const prev = document.querySelector('.gallery-arrow.prev');
+  const next = document.querySelector('.gallery-arrow.next');
+  const caption = document.getElementById('galCaption');
+  const dotsBox = document.getElementById('galDots');
+  let index = 0;
+
+  function showDots() {
+    dotsBox.innerHTML = slides.map((s, i) =>
+      '<button class="gallery-dot' + (i === index ? ' active' : '') + '" data-i="' + i + '" aria-label="Slide ' + (i + 1) + '"></button>'
+    ).join('');
+    dotsBox.querySelectorAll('.gallery-dot').forEach(d => {
+      d.addEventListener('click', () => { index = Number(d.dataset.i); render(); });
+    });
+  }
+
+  function render() {
+    img.src = slides[index].url;
+    img.alt = slides[index].caption || projectName;
+    caption.textContent = slides[index].caption || '';
+    prev.classList.toggle('hidden', slides.length <= 1);
+    next.classList.toggle('hidden', slides.length <= 1);
+    dotsBox.classList.toggle('hidden', slides.length <= 1);
+    showDots();
+  }
+
+  prev.addEventListener('click', () => { index = (index - 1 + slides.length) % slides.length; render(); });
+  next.addEventListener('click', () => { index = (index + 1) % slides.length; render(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { index = (index - 1 + slides.length) % slides.length; render(); }
+    else if (e.key === 'ArrowRight') { index = (index + 1) % slides.length; render(); }
+  });
+
+  frame.addEventListener('click', (e) => {
+    if (e.target === img) {
+      lbImg.src = slides[index].url;
+      lbImg.alt = slides[index].caption || projectName;
+      lbCaption.textContent = slides[index].caption || '';
+      lightbox.classList.add('open');
+    }
+  });
+
+  render();
+}
 </script>
 </body>
 </html>

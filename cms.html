@@ -394,6 +394,13 @@
             <div class="hint">Buttons shown on the project detail page. First button is the primary action. Check "Card" to also show it on the project card.</div>
           </div>
 
+          <div class="form-group full">
+            <label>Gallery</label>
+            <div id="galleryList"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addGalleryRow()" style="margin-top:8px;">+ Add Image</button>
+            <div class="hint">The Cover Image above is always shown as the first slide, followed by these gallery images. Upload image files to the repo first (e.g. images/gallery/name.png), then enter the path here.</div>
+          </div>
+
           <div class="form-check">
             <input type="checkbox" id="fFeatured">
             <label for="fFeatured">Featured on Home Page (limit 1)</label>
@@ -436,8 +443,8 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=3"></script>
-<script src="js/script.js?v=3"></script>
+<script src="data/projects.js?v=4"></script>
+<script src="js/script.js?v=4"></script>
 <script>
 let projects = [];
 let currentEditIndex = -1;
@@ -456,7 +463,8 @@ const defaultProject = () => ({
   age: '',
   featured: false,
   showOnTable: false,
-  buttons: []
+  buttons: [],
+  gallery: []
 });
 
 function generateId(name) {
@@ -520,6 +528,8 @@ function selectProject(index) {
   document.getElementById('fAge').value = p.age || '';
   document.getElementById('buttonsList').innerHTML = '';
   (p.buttons || []).forEach(addButtonRow);
+  document.getElementById('galleryList').innerHTML = '';
+  (p.gallery || []).forEach(addGalleryRow);
   document.getElementById('fFeatured').checked = p.featured;
   document.getElementById('fShowOnTable').checked = p.showOnTable;
 
@@ -555,7 +565,8 @@ function collectFormData() {
     age: document.getElementById('fAge').value.trim() || null,
     featured: document.getElementById('fFeatured').checked,
     showOnTable: document.getElementById('fShowOnTable').checked,
-    buttons: collectButtons()
+    buttons: collectButtons(),
+    gallery: collectGallery()
   };
 }
 
@@ -584,6 +595,58 @@ function addButtonRow(data) {
 
 function removeButtonRow(btn) {
   btn.closest('.button-row').remove();
+}
+
+function collectGallery() {
+  return Array.from(document.querySelectorAll('#galleryList .gallery-row'))
+    .filter(row => row.querySelector('.gal-url').value.trim())
+    .map(row => ({
+      url: row.querySelector('.gal-url').value.trim(),
+      caption: row.querySelector('.gal-caption').value.trim() || null
+    }));
+}
+
+function addGalleryRow(data) {
+  data = data || {};
+  const row = document.createElement('div');
+  row.className = 'gallery-row';
+  row.style.cssText = 'display:grid; grid-template-columns:44px 1fr 1fr auto auto; gap:8px; align-items:center; margin-bottom:8px;';
+  row.innerHTML =
+    '<img class="gal-preview" alt="Preview" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#eee; border:1px solid #ddd;">' +
+    '<input type="url" class="gal-url" placeholder="images/gallery/name.png" value="' + escAttr(data.url) + '">' +
+    '<input type="text" class="gal-caption" placeholder="Caption (optional)" value="' + escAttr(data.caption) + '">' +
+    '<div style="display:flex; flex-direction:column; gap:2px;">' +
+      '<button type="button" class="sort-btn" onclick="moveGalleryRow(this, -1)" title="Move up">↑</button>' +
+      '<button type="button" class="sort-btn" onclick="moveGalleryRow(this, 1)" title="Move down">↓</button>' +
+    '</div>' +
+    '<button type="button" class="sort-btn" onclick="removeGalleryRow(this)" title="Remove" style="width:28px; height:28px;">✕</button>';
+  document.getElementById('galleryList').appendChild(row);
+  row.querySelector('.gal-url').addEventListener('input', () => updateGalleryPreview(row));
+  updateGalleryPreview(row);
+}
+
+function updateGalleryPreview(row) {
+  const img = row.querySelector('.gal-preview');
+  const url = row.querySelector('.gal-url').value.trim();
+  if (url) {
+    img.src = url;
+  } else {
+    img.removeAttribute('src');
+  }
+}
+
+function removeGalleryRow(btn) {
+  btn.closest('.gallery-row').remove();
+}
+
+function moveGalleryRow(btn, direction) {
+  const row = btn.closest('.gallery-row');
+  const parent = document.getElementById('galleryList');
+  const rows = Array.from(parent.children);
+  const index = rows.indexOf(row);
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= rows.length) return;
+  parent.insertBefore(row, rows[newIndex + (direction < 0 ? 0 : 1)]);
 }
 
 function escAttr(v) {
