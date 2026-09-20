@@ -38,6 +38,35 @@ prototypes/          Playable HTML prototypes
 Use `cms.html` to manage projects:
 1. Open `cms.html` in your browser
 2. Add/edit projects using the form
-3. Click "Download JSON" to export updated `projects.json`
-4. Copy the content to `data/projects.js` (wrap in `var PROJECTS_DATA = { ... };`)
+3. Click "Download JSON + JS" to export updated `projects.json` **and** `projects.js` together
+4. Upload both files (`data/projects.json` + `data/projects.js`) — they must stay in sync
 5. Commit to git — GitHub Pages redeploys automatically
+
+### Project data schema
+
+Each project in `data/projects.js` / `data/projects.json` supports:
+
+```js
+{
+  id: 'gems-jewels',
+  name: 'Gems & Jewels',
+  status: 'prototype' | 'development' | 'released',
+  coverGradient: 'linear-gradient(160deg, #2a1c12, #4a3018)',
+  coverImage: 'images/Gem&Jewels.png',   // optional cover image
+  coverEmoji: ['💎', '✨'],               // emoji shown on covers
+  description: 'Short description',
+  longDescription: 'Full description',
+  players: '1-4',
+  playtime: '15-30 Mins',
+  age: '4+',
+  featured: false,        // featured on home page (limit 1)
+  showOnTable: false,     // shown in "On the Table" section (limit 3)
+  buttons: [              // action buttons on the project detail page
+    { label: 'Try it', url: 'prototypes/gems-jewels.html', featured: true },
+    { label: 'View Rulebook', url: 'Document/Rulebook_JG.pdf', featured: false }
+  ]
+}
+```
+
+- The detail page renders `buttons` in order — first = primary style, rest = outline.
+- The project **card** (grid pages) shows only the button flagged `featured: true` (falls back to the first button).

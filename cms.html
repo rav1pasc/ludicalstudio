@@ -384,41 +384,14 @@
               <label>Age</label>
               <input type="text" id="fAge" placeholder="10+">
             </div>
-            <div class="form-group">
-              <label>HTML Prototype File</label>
-              <input type="text" id="fPrototypeFile" placeholder="prototypes/my-game.html">
-              <div class="hint">Path to playable HTML file (for Play page)</div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>YouTube Video URL</label>
-              <input type="url" id="fYoutube" placeholder="https://youtube.com/watch?v=...">
-            </div>
-            <div class="form-group">
-              <label>Rulebook URL</label>
-              <input type="url" id="fRulebook" placeholder="https://...">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Shop URL</label>
-              <input type="url" id="fShop" placeholder="https://...">
-            </div>
-            <div class="form-group">
-              <label>Custom Button Label</label>
-              <input type="text" id="fCustomLabel" placeholder="Watch Video">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Custom Button URL</label>
-              <input type="url" id="fCustomUrl" placeholder="https://...">
-            </div>
             <div class="form-group"></div>
+          </div>
+
+          <div class="form-group full">
+            <label>Project Buttons</label>
+            <div id="buttonsList"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addButtonRow()" style="margin-top:8px;">+ Add Button</button>
+            <div class="hint">Buttons shown on the project detail page. First button is the primary action. Check "Card" to also show it on the project card.</div>
           </div>
 
           <div class="form-check">
@@ -463,8 +436,8 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=2"></script>
-<script src="js/script.js?v=2"></script>
+<script src="data/projects.js?v=3"></script>
+<script src="js/script.js?v=3"></script>
 <script>
 let projects = [];
 let currentEditIndex = -1;
@@ -483,12 +456,7 @@ const defaultProject = () => ({
   age: '',
   featured: false,
   showOnTable: false,
-  prototypeFile: null,
-  rulebookUrl: null,
-  youtubeUrl: null,
-  shopUrl: null,
-  customButtonLabel: null,
-  customButtonUrl: null
+  buttons: []
 });
 
 function generateId(name) {
@@ -550,12 +518,8 @@ function selectProject(index) {
   document.getElementById('fPlayers').value = p.players || '';
   document.getElementById('fPlaytime').value = p.playtime || '';
   document.getElementById('fAge').value = p.age || '';
-  document.getElementById('fPrototypeFile').value = p.prototypeFile || '';
-  document.getElementById('fYoutube').value = p.youtubeUrl || '';
-  document.getElementById('fRulebook').value = p.rulebookUrl || '';
-  document.getElementById('fShop').value = p.shopUrl || '';
-  document.getElementById('fCustomLabel').value = p.customButtonLabel || '';
-  document.getElementById('fCustomUrl').value = p.customButtonUrl || '';
+  document.getElementById('buttonsList').innerHTML = '';
+  (p.buttons || []).forEach(addButtonRow);
   document.getElementById('fFeatured').checked = p.featured;
   document.getElementById('fShowOnTable').checked = p.showOnTable;
 
@@ -591,13 +555,39 @@ function collectFormData() {
     age: document.getElementById('fAge').value.trim() || null,
     featured: document.getElementById('fFeatured').checked,
     showOnTable: document.getElementById('fShowOnTable').checked,
-    prototypeFile: document.getElementById('fPrototypeFile').value.trim() || null,
-    rulebookUrl: document.getElementById('fRulebook').value.trim() || null,
-    youtubeUrl: document.getElementById('fYoutube').value.trim() || null,
-    shopUrl: document.getElementById('fShop').value.trim() || null,
-    customButtonLabel: document.getElementById('fCustomLabel').value.trim() || null,
-    customButtonUrl: document.getElementById('fCustomUrl').value.trim() || null
+    buttons: collectButtons()
   };
+}
+
+function collectButtons() {
+  return Array.from(document.querySelectorAll('#buttonsList .button-row'))
+    .filter(row => row.querySelector('.btn-label').value.trim() && row.querySelector('.btn-url').value.trim())
+    .map(row => ({
+      label: row.querySelector('.btn-label').value.trim(),
+      url: row.querySelector('.btn-url').value.trim(),
+      featured: row.querySelector('.btn-featured').checked
+    }));
+}
+
+function addButtonRow(data) {
+  data = data || {};
+  const row = document.createElement('div');
+  row.className = 'button-row';
+  row.style.cssText = 'display:grid; grid-template-columns:1fr 1.4fr auto auto; gap:8px; align-items:center; margin-bottom:8px;';
+  row.innerHTML =
+    '<input type="text" class="btn-label" placeholder="Label (e.g. Try it)" value="' + escAttr(data.label) + '">' +
+    '<input type="url" class="btn-url" placeholder="https:// or path" value="' + escAttr(data.url) + '">' +
+    '<label style="font-weight:600; font-size:0.78rem; display:flex; gap:4px; align-items:center; white-space:nowrap;"><input type="checkbox" class="btn-featured"' + (data.featured ? ' checked' : '') + '> Card</label>' +
+    '<button type="button" class="sort-btn" onclick="removeButtonRow(this)" title="Remove" style="width:28px; height:28px;">✕</button>';
+  document.getElementById('buttonsList').appendChild(row);
+}
+
+function removeButtonRow(btn) {
+  btn.closest('.button-row').remove();
+}
+
+function escAttr(v) {
+  return String(v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
 function saveProject() {

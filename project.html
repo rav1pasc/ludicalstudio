@@ -133,8 +133,8 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=2"></script>
-<script src="js/script.js?v=2"></script>
+<script src="data/projects.js?v=3"></script>
+<script src="js/script.js?v=3"></script>
 <script>
 (async () => {
   const params = new URLSearchParams(window.location.search);
@@ -165,20 +165,11 @@
   if (project.playtime) metaParts.push('<div class="meta-badge">⏱ ' + project.playtime + '</div>');
   if (project.age) metaParts.push('<div class="meta-badge">🔞 Ages ' + project.age + '</div>');
 
-  const actionsHtml = [
-    project.customButtonLabel && project.customButtonUrl
-      ? '<a href="' + project.customButtonUrl + '" target="_blank" rel="noopener" class="btn btn-primary">' + project.customButtonLabel + '</a>'
-      : '',
-    project.youtubeUrl
-      ? '<a href="' + project.youtubeUrl + '" target="_blank" rel="noopener" class="btn btn-outline">Watch on YouTube</a>'
-      : '',
-    project.rulebookUrl
-      ? '<a href="' + project.rulebookUrl + '" target="_blank" rel="noopener" class="btn btn-outline">View Rulebook</a>'
-      : '',
-    project.shopUrl
-      ? '<a href="' + project.shopUrl + '" target="_blank" rel="noopener" class="btn btn-dark">Buy Online</a>'
-      : ''
-  ].filter(Boolean).join('');
+  const projectButtons = (project.buttons || [])
+    .filter(b => b.label && b.url);
+  const actionsHtml = projectButtons
+    .map((b, i) => '<a href="' + b.url + '" target="_blank" rel="noopener" class="btn ' + (i === 0 ? 'btn-primary' : 'btn-outline') + '">' + b.label + '</a>')
+    .join('');
 
   content.innerHTML = `
     <a href="projects.html" class="back-link">← Back to Projects</a>

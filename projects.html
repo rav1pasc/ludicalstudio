@@ -70,8 +70,8 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=2"></script>
-<script src="js/script.js?v=2"></script>
+<script src="data/projects.js?v=3"></script>
+<script src="js/script.js?v=3"></script>
 <script>
 (async () => {
   const data = await fetchProjects();
@@ -87,8 +87,9 @@
       ? '<div class="meta-row">' + metaParts.map(m => '<span>' + m + '</span>').join('') + '</div>'
       : '';
 
-    const customBtn = project.customButtonLabel && project.customButtonUrl
-      ? '<a href="' + project.customButtonUrl + '" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:10px; padding:10px 20px; font-size:0.85rem;">' + project.customButtonLabel + '</a>'
+    const featuredBtn = (project.buttons || []).find(b => b.featured && b.label && b.url) || (project.buttons || []).find(b => b.label && b.url) || null;
+    const customBtn = featuredBtn
+      ? '<a href="' + featuredBtn.url + '" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:10px; padding:10px 20px; font-size:0.85rem;">' + featuredBtn.label + '</a>'
       : '';
 
     const viewBtn = '<a href="project.html?id=' + project.id + '" class="btn btn-outline" style="margin-top:14px; padding:10px 20px; font-size:0.85rem;">View</a>';

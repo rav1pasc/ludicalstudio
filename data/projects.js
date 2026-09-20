@@ -14,12 +14,23 @@ var PROJECTS_DATA = {
       "age": "4+",
       "featured": true,
       "showOnTable": true,
-      "prototypeFile": null,
-      "rulebookUrl": "Document/Rulebook_JG.pdf",
-      "youtubeUrl": null,
-      "shopUrl": null,
-      "customButtonLabel": "Try Gems & Jewels",
-      "customButtonUrl": "prototypes/gems-jewels.html"
+      "buttons": [
+        {
+          "label": "Try Gems & Jewels",
+          "url": "prototypes/gems-jewels.html",
+          "featured": true
+        },
+        {
+          "label": "View Rulebook (TH)",
+          "url": "Document/Rulebook_JG.pdf",
+          "featured": false
+        },
+        {
+          "label": "View Rulebook (EN)",
+          "url": "Document/Rulebook_JG.pdf",
+          "featured": false
+        }
+      ]
     },
     {
       "id": "svg-template-studio",
@@ -39,12 +50,13 @@ var PROJECTS_DATA = {
       "age": null,
       "featured": false,
       "showOnTable": true,
-      "prototypeFile": "prototypes/svg-template-studio.html",
-      "rulebookUrl": null,
-      "youtubeUrl": null,
-      "shopUrl": null,
-      "customButtonLabel": "Open SVG Studio",
-      "customButtonUrl": "prototypes/svg-template-studio.html"
+      "buttons": [
+        {
+          "label": "Open SVG Studio",
+          "url": "prototypes/svg-template-studio.html",
+          "featured": true
+        }
+      ]
     }
   ]
 };
