@@ -247,6 +247,14 @@
     font-family: var(--font-display);
     margin: 0 0 16px;
   }
+  .desc-preview {
+    border: 2px solid #eee;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    background: #fcfcfc;
+    font-size: 0.92rem;
+  }
   @media (max-width: 860px) {
     .cms-layout { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
@@ -338,8 +346,11 @@
 
           <div class="form-row">
             <div class="form-group full">
-              <label>Long Description</label>
+              <label>Long Description <span class="hint">(Markdown supported)</span></label>
               <textarea id="fLongDesc" rows="3"></textarea>
+              <div class="hint">Supports Markdown: # heading, ## sub-heading, **bold**, *italic*, - list item, 1. numbered, [link](url), &gt; quote, `code`, ``` fenced code blocks</div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="toggleDescPreview()" style="margin-top:6px;">Preview</button>
+              <div class="markdown desc-preview" id="descPreview" style="display:none;"></div>
             </div>
           </div>
 
@@ -443,8 +454,8 @@
   </div>
 </footer>
 
-<script src="data/projects.js?v=4"></script>
-<script src="js/script.js?v=4"></script>
+<script src="data/projects.js?v=5"></script>
+<script src="js/script.js?v=5"></script>
 <script>
 let projects = [];
 let currentEditIndex = -1;
@@ -680,6 +691,21 @@ function cancelEdit() {
   renderList();
 }
 
+function toggleDescPreview() {
+  const pv = document.getElementById('descPreview');
+  if (pv.style.display === 'none') {
+    pv.style.display = 'block';
+    updateDescPreview();
+  } else {
+    pv.style.display = 'none';
+  }
+}
+
+function updateDescPreview() {
+  document.getElementById('descPreview').innerHTML =
+    renderMarkdown(document.getElementById('fLongDesc').value.trim() || '');
+}
+
 function updateCoverPreview() {
   const gradStart = document.getElementById('fGradStart').value.trim() || '#AF1215';
   const gradEnd = document.getElementById('fGradEnd').value.trim() || '#D42E33';
@@ -746,6 +772,10 @@ function copyJson() {
 
 document.querySelectorAll('#fGradStart, #fGradEnd, #fName').forEach(el => {
   el.addEventListener('input', updateCoverPreview);
+});
+
+document.getElementById('fLongDesc').addEventListener('input', () => {
+  if (document.getElementById('descPreview').style.display !== 'none') updateDescPreview();
 });
 
 (async () => {

@@ -241,8 +241,8 @@
   <div class="lightbox-caption" id="lbCaption"></div>
 </div>
 
-<script src="data/projects.js?v=4"></script>
-<script src="js/script.js?v=4"></script>
+<script src="data/projects.js?v=5"></script>
+<script src="js/script.js?v=5"></script>
 <script>
 (async () => {
   const params = new URLSearchParams(window.location.search);
@@ -310,8 +310,8 @@
     <div class="project-detail-body">
       ${metaParts.length ? '<div class="project-meta">' + metaParts.join('') + '</div>' : ''}
 
-      <div class="project-desc">
-        <p>${project.longDescription || project.description}</p>
+      <div class="project-desc markdown">
+        ${renderMarkdown(project.longDescription || project.description)}
       </div>
 
       ${actionsHtml ? '<div class="project-actions">' + actionsHtml + '</div>' : ''}

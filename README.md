@@ -75,3 +75,5 @@ Each project in `data/projects.js` / `data/projects.json` supports:
 - The detail page renders `buttons` in order — first = primary style, rest = outline.
 - The project **card** (grid pages) shows only the button flagged `featured: true` (falls back to the first button).
 - The **slideshow** on the detail page always starts with `coverImage` (if set), then `gallery` images. Empty `gallery` falls back to just the cover. Clicking a slide enlarges it in a lightbox (✕ / click outside / Esc to close).
+- **`longDescription` supports Markdown** (rendered by the built-in `renderMarkdown` in `js/script.js`): `#`–`######` headings, `**bold**`, `*italic*`, `~~strike~~`, `-`/`1.` lists (nested), ``` `code` ```, fenced code blocks, `[links](url)`, `![images](url)`, `>` blockquotes, `---` horizontal rules. The CMS has a live "Preview" toggle for it.
+- The short `description` field stays plain text (used on cards and hero).
