@@ -18,7 +18,7 @@ var PROJECTS_DATA = {
       "featured": true,
       "showOnTable": true,
       "prototypeFile": "prototypes/gems-jewels.html",
-      "rulebookUrl": null,
+      "rulebookUrl": "Document/Rulebook_JG.pdf",
       "youtubeUrl": null,
       "shopUrl": null,
       "customButtonLabel": "Open Gems & Jewels",
